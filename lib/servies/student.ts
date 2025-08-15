@@ -24,7 +24,7 @@ export const studentService = {
         const { data, error } = await supabase
             .from(TABLE_NAME)
             .select('*')
-            .order('first_name', { ascending: true });
+            .order('full_name', { ascending: true });
 
         if (error) {
             console.error('Error fetching users:', error);
