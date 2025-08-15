@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quran Ḥifẓ Student Management — MVP</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+    <style>
+        :root {
+            --brand: #0d6efd;
+            --brand-600: #0b5ed7;
+        }
+
+        body {
+            background: #f8fafc;
+        }
+
+        .app-shell {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 1rem;
+        }
+
+        .nav-pills .nav-link {
+            border-radius: 0.75rem;
+        }
+
+        .card-soft {
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(13, 110, 253, .06);
+        }
+
+        .table thead th {
+            white-space: nowrap;
+        }
+
+        .pointer {
+            cursor: pointer;
+        }
+
+        .badge-soft {
+            background: rgba(13, 110, 253, .1);
+            color: var(--brand-600);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--brand);
+            border-color: var(--brand);
+        }
+
+        .sticky-actions {
+            position: sticky;
+            bottom: 0;
+            background: #fff;
+            padding-top: .5rem;
+        }
+
+        .truncate {
+            max-width: 280px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                position: static;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="container-fluid py-3 app-shell">
+        <div class="row g-3">
+            <!-- Navigation -->
+            <div class="col-lg-3">
+                <div class="card card-soft sidebar">
+                    <div class="card-body">
+                        <h5 class="mb-3">Qur'an Ḥifẓ — Ustaz</h5>
+                        <ul class="nav nav-pills flex-lg-column gap-2" role="tablist">
+                            <li class="nav-item"><button class="nav-link w-100" :class="{active: view==='dashboard'}"
+                                    @click="view='dashboard'"><i class="bi bi-speedometer2 me-2"></i>Dashboard</button>
+                            </li>
+                            <li class="nav-item"><button class="nav-link w-100" :class="{active: view==='students'}"
+                                    @click="view='students'"><i class="bi bi-people me-2"></i>Students</button></li>
+                            <li class="nav-item"><button class="nav-link w-100" :class="{active: view==='attendance'}"
+                                    @click="view='attendance'"><i
+                                        class="bi bi-calendar-check me-2"></i>Attendance</button></li>
+                            <li class="nav-item"><button class="nav-link w-100" :class="{active: view==='progress'}"
+                                    @click="view='progress'"><i class="bi bi-check2-square me-2"></i>Ḥifẓ
+                                    Progress</button></li>
+                            <li class="nav-item"><button class="nav-link w-100" :class="{active: view==='tests'}"
+                                    @click="view='tests'"><i class="bi bi-clipboard-data me-2"></i>Weekly Tests</button>
+                            </li>
+                            <li class="nav-item"><button class="nav-link w-100" :class="{active: view==='punishments'}"
+                                    @click="view='punishments'"><i
+                                        class="bi bi-exclamation-triangle me-2"></i>Punishments</button></li>
+                            <li class="nav-item"><button class="nav-link w-100" :class="{active: view==='rules'}"
+                                    @click="view='rules'"><i class="bi bi-list-check me-2"></i>Rules</button></li>
+                        </ul>
+                        <hr>
+                        <div class="small text-muted">Class time: <strong>20:30</strong> daily</div>
+                        <div class="small text-muted">Today: <strong>{{ todayStr }}</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <!-- Dashboard -->
+                <section v-if="view==='dashboard'">
+                    <div class="d-flex align-items-center mb-3">
+                        <h4 class="mb-0">Dashboard — Current Week ({{ weekRangeLabel }})</h4>
+                        <button class="btn btn-outline-secondary btn-sm ms-auto" @click="resetAll()"><i
+                                class="bi bi-arrow-counterclockwise me-1"></i>Reset (Seed)</button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <div class="card card-soft">
+                                <div class="card-body">
+                                    <div class="text-muted small">Average Lateness</div>
+                                    <div class="h4 mb-0">{{ avgLatenessThisWeek.toFixed(1) }} <span
+                                            class="fs-6 text-muted">min</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="card card-soft">
+                                <div class="card-body">
+                                    <div class="text-muted small">Punishments (wk)</div>
+                                    <div class="h4 mb-0">{{ punishmentsThisWeek }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="card card-soft">
+                                <div class="card-body">
+                                    <div class="text-muted small">Students</div>
+                                    <div class="h4 mb-0">{{ students.length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="card card-soft">
+                                <div class="card-body">
+                                    <div class="text-muted small">Avg Ḥifẓ Completion</div>
+                                    <div class="h4 mb-0">{{ classWeeklyCompletionPercent.toFixed(0) }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-soft mt-3">
+                        <div class="card-body">
+                            <h6 class="mb-3">This Week Activity Glance</h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex align-items-center"
+                                            v-for="a in attendanceThisWeek.slice(0,6)" :key="'dash-a-'+a.id">
+                                            <i class="bi bi-alarm me-2 text-warning"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="small"><strong>{{ studentName(a.studentId) }}</strong> —
+                                                    {{ a.date }} • <span
+                                                        :class="{'text-success': a.status==='Present', 'text-danger': a.status==='Absent'}">{{ a.status }}</span>
+                                                </div>
+                                                <div class="small text-muted" v-if="a.status==='Present'">Arrived
+                                                    {{ a.arrivalTime }} (Late {{ a.latenessInMinutes }}m)</div>
+                                                <div class="small text-muted" v-else>Excuse: {{ a.excuse || '—' }}</div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex align-items-center"
+                                            v-for="t in latestTests.slice(0,3)" :key="'dash-t-'+t.date">
+                                            <i class="bi bi-clipboard-check me-2 text-primary"></i>
+                                            <div>
+                                                <div class="small"><strong>Weekly Test</strong> — {{ t.date }}</div>
+                                                <div class="small text-muted">Top score:
+                                                    {{ t.results.sort((a,b)=>b.score-a.score)[0]?.score ?? '—' }}</div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Students -->
+                <section v-if="view==='students'">
+                    <div class="d-flex align-items-center mb-3">
+                        <h4 class="mb-0">Students</h4>
+                        <div class="ms-auto input-group" style="max-width: 360px;">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input v-model="studentSearch" type="search" class="form-control"
+                                placeholder="Search by name or family phone..." />
+                        </div>
+                        <button class="btn btn-primary ms-2" @click="openStudentModal()"><i
+                                class="bi bi-plus-lg me-1"></i>Add Student</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th class="pointer" @click="sortBy('fullName')">Full Name <i
+                                            :class="sortIcon('fullName')"></i></th>
+                                    <th>Family Name</th>
+                                    <th>Family Phone</th>
+                                    <th class="pointer" @click="sortBy('currentHifzPage')">Current Page <i
+                                            :class="sortIcon('currentHifzPage')"></i></th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="s in filteredSortedStudents" :key="s.id">
+                                    <td>{{ s.fullName }}</td>
+                                    <td>{{ s.familyName }}</td>
+                                    <td><span class="badge bg-light text-dark">{{ s.familyPhone }}</span></td>
+                                    <td><span class="badge badge-soft">{{ s.currentHifzPage }}</span></td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-secondary me-1"
+                                            @click="viewStudentDetails(s)"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-sm btn-outline-primary me-1"
+                                            @click="openStudentModal(s)"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger" @click="deleteStudent(s.id)"><i
+                                                class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div v-if="selectedStudent" class="card card-soft mt-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <h5 class="mb-0">Student Details — {{ selectedStudent.fullName }}</h5>
+                                <div class="ms-auto small text-muted">ID: {{ selectedStudent.id }}</div>
+                            </div>
+                            <hr>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div><strong>Family:</strong> {{ selectedStudent.familyName }}</div>
+                                    <div><strong>Phone:</strong> {{ selectedStudent.familyPhone }}</div>
+                                    <div class="mt-2">
+                                        <label class="form-label">Current Ḥifẓ Page</label>
+                                        <div class="input-group" style="max-width:240px;">
+                                            <input type="number" class="form-control"
+                                                v-model.number="selectedStudent.currentHifzPage" />
+                                            <button class="btn btn-outline-primary"
+                                                @click="updateStudent(selectedStudent)">Save</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="p-2 bg-light rounded">Attendance (wk):
+                                                <strong>{{ attendanceByStudentThisWeek(selectedStudent.id).length }}</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="p-2 bg-light rounded">Tests taken:
+                                                <strong>{{ testsByStudent(selectedStudent.id).length }}</strong></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <h6>Attendance History</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item"
+                                            v-for="a in attendanceByStudent(selectedStudent.id).slice(-10).reverse()"
+                                            :key="'sd-a-'+a.id">
+                                            {{ a.date }} — <strong
+                                                :class="{'text-success': a.status==='Present', 'text-danger': a.status==='Absent'}">{{ a.status }}</strong>
+                                            <span v-if="a.status==='Present'" class="text-muted"> • {{ a.arrivalTime }}
+                                                ({{ a.latenessInMinutes }}m late)</span>
+                                            <div class="small text-muted" v-if="a.excuse">Excuse: {{ a.excuse }}</div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Test History</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item"
+                                            v-for="t in testsByStudent(selectedStudent.id).slice(-10).reverse()"
+                                            :key="'sd-t-'+t.date">
+                                            {{ t.date }} — Score: <strong>{{ t.score }}</strong>, Tajweed:
+                                            {{ t.tajweedErrors }}, Fluency: {{ t.fluency }}, Presentation:
+                                            {{ t.presentation }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Attendance -->
+                <section v-if="view==='attendance'">
+                    <div class="d-flex align-items-center mb-3">
+                        <h4 class="mb-0">Attendance — {{ todayStr }}</h4>
+                        <div class="ms-auto">
+                            <button class="btn btn-outline-secondary btn-sm me-2" @click="view='students'"><i
+                                    class="bi bi-people me-1"></i>Manage Students</button>
+                        </div>
+                    </div>
+
+                    <div class="card card-soft mb-3">
+                        <div class="card-body">
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-6">
+                                    <div class="small text-muted">Tap
+                                        <span class="badge bg-success">Attend</span> when the student arrives. Lateness
+                                        is auto-calculated from 20:30.
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-md-end small">Records saved in browser (localStorage).</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Status</th>
+                                    <th>Arrival</th>
+                                    <th>Lateness</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="s in students" :key="'att-'+s.id">
+                                    <td class="truncate">{{ s.fullName }}</td>
+                                    <td>
+                                        <span
+                                            :class="attendanceStatusChipClass(todayAttendanceByStudent(s.id)?.status)">
+                                            {{ todayAttendanceByStudent(s.id)?.status || '—' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ todayAttendanceByStudent(s.id)?.arrivalTime || '—' }}</td>
+                                    <td>{{ todayAttendanceByStudent(s.id)?.latenessInMinutes ?? '—' }}</td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-success" @click="markPresent(s)"><i
+                                                    class="bi bi-person-check me-1"></i>Attend</button>
+                                            <button class="btn btn-sm btn-outline-danger" @click="openAbsentModal(s)"><i
+                                                    class="bi bi-x-circle me-1"></i>Mark Absent</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card card-soft mt-3">
+                        <div class="card-body">
+                            <h6 class="mb-2">Today's Records</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Status</th>
+                                            <th>Arrival</th>
+                                            <th>Late (m)</th>
+                                            <th>Excuse</th>
+                                            <th>Punishment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="a in attendance.filter(x=>x.date===todayStr)" :key="'today-'+a.id">
+                                            <td>{{ studentName(a.studentId) }}</td>
+                                            <td
+                                                :class="{'text-success': a.status==='Present', 'text-danger': a.status==='Absent'}">
+                                                {{ a.status }}</td>
+                                            <td>{{ a.arrivalTime || '—' }}</td>
+                                            <td>{{ a.latenessInMinutes ?? '—' }}</td>
+                                            <td class="truncate">{{ a.excuse || '—' }}</td>
+                                            <td>{{ punishmentName(a.assignedPunishmentId) || '—' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Progress -->
+                <section v-if="view==='progress'">
+                    <div class="d-flex align-items-center mb-3">
+                        <h4 class="mb-0">Daily Ḥifẓ Progress — {{ todayStr }}</h4>
+                        <div class="ms-auto small text-muted">Weekly plan: 1 page/day</div>
+                    </div>
+
+                    <div class="card card-soft">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Mark Done (today)</th>
+                                            <th>Done Today?</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="s in students" :key="'prog-'+s.id">
+                                            <td>{{ s.fullName }}</td>
+                                            <td>
+                                                <button class="btn btn-sm"
+                                                    :class="isDoneToday(s.id)?'btn-success':'btn-outline-primary'"
+                                                    @click="toggleDoneToday(s.id)">
+                                                    <i class="bi"
+                                                        :class="isDoneToday(s.id)?'bi-check-lg':'bi-square'"></i>
+                                                    {{ isDoneToday(s.id)?'Completed':'Mark Done' }}
+                                                </button>
+                                            </td>
+                                            <td>
+                                                <span v-if="isDoneToday(s.id)" class="badge bg-success">Yes</span>
+                                                <span v-else class="badge bg-secondary">No</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-soft mt-3">
+                        <div class="card-body">
+                            <h6 class="mb-3">Weekly Report ({{ weekRangeLabel }})</h6>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Start Page</th>
+                                            <th>Target Page</th>
+                                            <th>Actual Pages Completed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="s in students" :key="'wr-'+s.id">
+                                            <td>{{ s.fullName }}</td>
+                                            <td>{{ weeklyBaselineForStudent(s.id) ?? s.currentHifzPage }}</td>
+                                            <td>{{ weeklyTargetPageForStudent(s.id) }}</td>
+                                            <td>{{ weeklyCompletedForStudent(s.id) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tests -->
+                <section v-if="view==='tests'">
+                    <div class="row g-3">
+                        <div class="col-lg-6">
+                            <div class="card card-soft h-100">
+                                <div class="card-body">
+                                    <h5>Enter Weekly Test</h5>
+                                    <div class="mb-2">
+                                        <label class="form-label">Test Date (Friday)</label>
+                                        <input type="date" class="form-control" v-model="testDate" />
+                                    </div>
+
+                                    <div class="table-responsive" style="max-height: 380px; overflow: auto;">
+                                        <table class="table table-sm align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th>Student</th>
+                                                    <th style="width:90px;">Score</th>
+                                                    <th style="width:90px;">Tajweed</th>
+                                                    <th>Fluency</th>
+                                                    <th>Presentation</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="s in students" :key="'trow-'+s.id">
+                                                    <td class="truncate">{{ s.fullName }}</td>
+                                                    <td><input type="number" class="form-control form-control-sm"
+                                                            min="0" max="100" v-model.number="testInputs[s.id].score" />
+                                                    </td>
+                                                    <td><input type="number" class="form-control form-control-sm"
+                                                            min="0" v-model.number="testInputs[s.id].tajweedErrors" />
+                                                    </td>
+                                                    <td>
+                                                        <select class="form-select form-select-sm"
+                                                            v-model="testInputs[s.id].fluency">
+                                                            <option>Excellent</option>
+                                                            <option>Good</option>
+                                                            <option>Needs Improvement</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select class="form-select form-select-sm"
+                                                            v-model="testInputs[s.id].presentation">
+                                                            <option>Excellent</option>
+                                                            <option>Good</option>
+                                                            <option>Needs Improvement</option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="sticky-actions mt-2 text-end">
+                                        <button class="btn btn-primary" @click="saveWeeklyTest()"><i
+                                                class="bi bi-save me-1"></i>Save Test</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="card card-soft h-100">
+                                <div class="card-body">
+                                    <h5>Test Results & Ranking</h5>
+                                    <div class="row g-2 align-items-end mb-2">
+                                        <div class="col">
+                                            <label class="form-label">Select Test Date</label>
+                                            <select class="form-select" v-model="selectedTestDate">
+                                                <option v-for="t in tests" :key="'td-'+t.date" :value="t.date">
+                                                    {{ t.date }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div v-if="selectedTest">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm align-middle">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Student</th>
+                                                        <th>Score</th>
+                                                        <th>Tajweed</th>
+                                                        <th>Fluency</th>
+                                                        <th>Presentation</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="(r,idx) in rankedResults" :key="'rr-'+r.studentId">
+                                                        <td><span class="badge bg-primary">{{ idx+1 }}</span></td>
+                                                        <td>{{ studentName(r.studentId) }}</td>
+                                                        <td><strong>{{ r.score }}</strong></td>
+                                                        <td>{{ r.tajweedErrors }}</td>
+                                                        <td>{{ r.fluency }}</td>
+                                                        <td>{{ r.presentation }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-muted small">No test selected.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Punishments -->
+                <section v-if="view==='punishments'">
+                    <div class="d-flex align-items-center mb-3">
+                        <h4 class="mb-0">Punishments</h4>
+                        <button class="btn btn-primary ms-auto" @click="openPunishmentModal()"><i
+                                class="bi bi-plus-lg me-1"></i>Add Punishment</button>
+                    </div>
+                    <div class="card card-soft">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="p in punishments" :key="p.punishmentId">
+                                            <td>{{ p.punishmentId }}</td>
+                                            <td>{{ p.name }}</td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-primary me-1"
+                                                    @click="openPunishmentModal(p)"><i
+                                                        class="bi bi-pencil"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"
+                                                    @click="deletePunishment(p.punishmentId)"><i
+                                                        class="bi bi-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Rules -->
+                <section v-if="view==='rules'">
+                    <div class="d-flex align-items-center mb-3">
+                        <h4 class="mb-0">Rules</h4>
+                        <button class="btn btn-primary ms-auto" @click="openRuleModal()"><i
+                                class="bi bi-plus-lg me-1"></i>Add Rule</button>
+                    </div>
+                    <div class="card card-soft">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Description</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="r in rules" :key="r.ruleId">
+                                            <td>{{ r.ruleId }}</td>
+                                            <td>{{ r.description }}</td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-primary me-1"
+                                                    @click="openRuleModal(r)"><i class="bi bi-pencil"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"
+                                                    @click="deleteRule(r.ruleId)"><i class="bi bi-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Student Modal -->
+        <div class="modal fade" id="studentModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ editingStudent?.id ? 'Edit Student' : 'Add Student' }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" v-model="editingStudent.fullName" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Family Name</label>
+                            <input type="text" class="form-control" v-model="editingStudent.familyName" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Family Phone</label>
+                            <input type="text" class="form-control" v-model="editingStudent.familyPhone" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Current Ḥifẓ Page</label>
+                            <input type="number" class="form-control" v-model.number="editingStudent.currentHifzPage" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" @click="saveStudent()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Late/Present Modal -->
+        <div class="modal fade" id="lateModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Late Arrival — {{ modalCtx.student?.fullName }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2"><strong>Arrived:</strong> {{ modalCtx.arrivalTime }} • <strong>Late:</strong>
+                            {{ modalCtx.latenessInMinutes }} min</div>
+                        <div class="mb-2">
+                            <label class="form-label">Excuse (optional)</label>
+                            <textarea class="form-control" rows="2" v-model="modalCtx.excuse"
+                                placeholder="Type excuse..."></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Assign Punishment (optional)</label>
+                            <select class="form-select" v-model="modalCtx.assignedPunishmentId">
+                                <option :value="null">— None —</option>
+                                <option v-for="p in punishments" :key="'pm-'+p.punishmentId" :value="p.punishmentId">
+                                    {{ p.name }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button class="btn btn-primary" @click="confirmLateSave()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Absent Modal -->
+        <div class="modal fade" id="absentModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Mark Absent — {{ modalCtx.student?.fullName }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label class="form-label">Excuse (optional)</label>
+                            <textarea class="form-control" rows="3" v-model="modalCtx.excuse"
+                                placeholder="Type excuse..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button class="btn btn-danger" @click="confirmAbsentSave()">Mark Absent</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Punishment Modal -->
+        <div class="modal fade" id="punishmentModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            {{ editingPunishment?.punishmentId ? 'Edit Punishment' : 'Add Punishment' }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" v-model="editingPunishment.name" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" @click="savePunishment()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rule Modal -->
+        <div class="modal fade" id="ruleModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ editingRule?.ruleId ? 'Edit Rule' : 'Add Rule' }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" rows="3" v-model="editingRule.description"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" @click="saveRule()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEYS = {
+            students: 'qhsm_students',
+            attendance: 'qhsm_attendance',
+            punishments: 'qhsm_punishments',
+            rules: 'qhsm_rules',
+            tests: 'qhsm_tests',
+            progress: 'qhsm_progress', // {studentId, date, done:true}
+            weekBaselines: 'qhsm_weekly_baselines' // { [weekStartDate]: { [studentId]: startPage } }
+        };
+
+        const CLASS_START = { hour: 20, minute: 30 };
+
+        // Utils
+        function pad(n) { return n < 10 ? '0' + n : '' + n; }
+        function toDateStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+        function todayStr() { return toDateStr(new Date()); }
+        function timeStr(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+        function minutesDiff(a, b) { return Math.round((a - b) / 60000); }
+        function getWeekStart(d) { // Monday as start
+            const date = new Date(d);
+            const day = (date.getDay() + 6) % 7; // Mon=0
+            date.setDate(date.getDate() - day);
+            date.setHours(0, 0, 0, 0);
+            return date;
+        }
+        function getWeekEnd(d) { const ws = getWeekStart(d); const e = new Date(ws); e.setDate(ws.getDate() + 6); return e; }
+        function mostRecentFriday(fromDate) {
+            const d = new Date(fromDate);
+            const day = d.getDay(); // Sun=0 ... Sat=6
+            const diff = (day >= 5) ? (day - 5) : (7 - (5 - day));
+            d.setDate(d.getDate() - diff);
+            return d;
+        }
+
+        const app = Vue.createApp({
+            data() {
+                return {
+                    view: 'dashboard',
+                    students: [],
+                    attendance: [],
+                    punishments: [],
+                    rules: [],
+                    tests: [],
+                    progress: [],
+                    weekBaselines: {},
+
+                    studentSearch: '',
+                    sortKey: 'fullName',
+                    sortAsc: true,
+
+                    selectedStudent: null,
+                    editingStudent: { id: null, fullName: '', familyName: '', familyPhone: '', currentHifzPage: 1 },
+
+                    modalCtx: { student: null, arrivalTime: '', latenessInMinutes: 0, excuse: '', assignedPunishmentId: null },
+
+                    editingPunishment: { punishmentId: null, name: '' },
+                    editingRule: { ruleId: null, description: '' },
+
+                    testDate: toDateStr(mostRecentFriday(new Date())),
+                    testInputs: {},
+                    selectedTestDate: null,
+                }
+            },
+            computed: {
+                todayStr() { return todayStr(); },
+                weekStart() { return getWeekStart(new Date()); },
+                weekEnd() { return getWeekEnd(new Date()); },
+                weekRangeLabel() { return toDateStr(this.weekStart) + ' → ' + toDateStr(this.weekEnd); },
+
+                filteredSortedStudents() {
+                    const q = this.studentSearch.trim().toLowerCase();
+                    let list = this.students.filter(s => !q ||
+                        s.fullName.toLowerCase().includes(q) ||
+                        s.familyName.toLowerCase().includes(q) ||
+                        s.familyPhone.toLowerCase().includes(q)
+                    );
+                    list.sort((a, b) => {
+                        const k = this.sortKey;
+                        const av = (a[k] ?? '').toString().toLowerCase();
+                        const bv = (b[k] ?? '').toString().toLowerCase();
+                        if (av < bv) return this.sortAsc ? -1 : 1;
+                        if (av > bv) return this.sortAsc ? 1 : -1;
+                        return 0;
+                    });
+                    return list;
+                },
+
+                attendanceThisWeek() {
+                    return this.attendance.filter(a => {
+                        const d = new Date(a.date);
+                        return d >= this.weekStart && d <= this.weekEnd;
+                    }).sort((a, b) => a.date.localeCompare(b.date));
+                },
+                avgLatenessThisWeek() {
+                    const pres = this.attendanceThisWeek.filter(a => a.status === 'Present');
+                    if (!pres.length) return 0;
+                    const sum = pres.reduce((acc, x) => acc + (x.latenessInMinutes || 0), 0);
+                    return sum / pres.length;
+                },
+                punishmentsThisWeek() {
+                    return this.attendanceThisWeek.filter(a => a.assignedPunishmentId != null).length;
+                },
+                latestTests() {
+                    const sorted = [...this.tests].sort((a, b) => b.date.localeCompare(a.date));
+                    return sorted;
+                },
+                selectedTest() {
+                    return this.tests.find(t => t.date === this.selectedTestDate) || null;
+                },
+                rankedResults() {
+                    if (!this.selectedTest) return [];
+                    const arr = [...this.selectedTest.results];
+                    arr.sort((a, b) => b.score - a.score);
+                    return arr;
+                },
+                classWeeklyCompletionPercent() {
+                    if (!this.students.length) return 0;
+                    const weekDaysElapsed = Math.max(1, Math.ceil((new Date() - this.weekStart) / 86400000));
+                    const targets = weekDaysElapsed; // 1 page/day
+                    let achieved = 0;
+                    this.students.forEach(s => {
+                        if (this.weeklyCompletedForStudent(s.id) >= targets) achieved += 1;
+                    });
+                    return (achieved / this.students.length) * 100;
+                },
+            },
+            created() {
+                this.loadAll();
+                this.ensureSeed();
+                this.initTestInputs();
+                this.selectedTestDate = this.tests[0]?.date || this.testDate;
+            },
+            methods: {
+                // Storage helpers
+                loadAll() {
+                    this.students = JSON.parse(localStorage.getItem(STORAGE_KEYS.students) || '[]');
+                    this.attendance = JSON.parse(localStorage.getItem(STORAGE_KEYS.attendance) || '[]');
+                    this.punishments = JSON.parse(localStorage.getItem(STORAGE_KEYS.punishments) || '[]');
+                    this.rules = JSON.parse(localStorage.getItem(STORAGE_KEYS.rules) || '[]');
+                    this.tests = JSON.parse(localStorage.getItem(STORAGE_KEYS.tests) || '[]');
+                    this.progress = JSON.parse(localStorage.getItem(STORAGE_KEYS.progress) || '[]');
+                    this.weekBaselines = JSON.parse(localStorage.getItem(STORAGE_KEYS.weekBaselines) || '{}');
+                },
+                persist(key, value) { localStorage.setItem(key, JSON.stringify(value)); },
+                resetAll() {
+                    if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+                        localStorage.clear();
+                        this.loadAll();
+                        this.ensureSeed();
+                        this.initTestInputs();
+                        alert('Data reset & seeded.');
+                    }
+                },
+                ensureSeed() {
+                    let changed = false;
+                    if (!this.students.length) {
+                        this.students = [
+                            { id: Date.now() + 1, fullName: 'Ahmed Musa', familyName: 'Musa', familyPhone: '0911-111111', currentHifzPage: 120 },
+                            { id: Date.now() + 2, fullName: 'Fatima Ali', familyName: 'Ali', familyPhone: '0912-222222', currentHifzPage: 95 },
+                            { id: Date.now() + 3, fullName: 'Yusuf Abdela', familyName: 'Abdela', familyPhone: '0913-333333', currentHifzPage: 180 },
+                            { id: Date.now() + 4, fullName: 'Maryam Nur', familyName: 'Nur', familyPhone: '0914-444444', currentHifzPage: 60 },
+                        ];
+                        this.persist(STORAGE_KEYS.students, this.students); changed = true;
+                    }
+                    if (!this.punishments.length) {
+                        this.punishments = [
+                            { punishmentId: 1, name: '10 Push-ups' },
+                            { punishmentId: 2, name: 'Revise 1 Page' },
+                        ];
+                        this.persist(STORAGE_KEYS.punishments, this.punishments); changed = true;
+                    }
+                    if (!this.rules.length) {
+                        this.rules = [
+                            { ruleId: 1, description: 'Late by 10 minutes = 10 push-ups' },
+                            { ruleId: 2, description: 'Absent without excuse = Extra revision next day' },
+                        ];
+                        this.persist(STORAGE_KEYS.rules, this.rules); changed = true;
+                    }
+                    if (changed) this.loadAll();
+                },
+
+                // Sorting
+                sortBy(k) {
+                    if (this.sortKey === k) this.sortAsc = !this.sortAsc; else { this.sortKey = k; this.sortAsc = true; }
+                },
+                sortIcon(k) {
+                    if (this.sortKey !== k) return 'bi bi-arrow-down-up text-muted';
+                    return this.sortAsc ? 'bi bi-arrow-down text-primary' : 'bi bi-arrow-up text-primary';
+                },
+
+                // Students CRUD
+                openStudentModal(s = null) {
+                    this.editingStudent = s ? { ...s } : { id: null, fullName: '', familyName: '', familyPhone: '', currentHifzPage: 1 };
+                    new bootstrap.Modal('#studentModal').show();
+                },
+                saveStudent() {
+                    const s = this.editingStudent;
+                    if (!s.fullName) return alert('Full Name is required');
+                    if (s.id) {
+                        const idx = this.students.findIndex(x => x.id === s.id);
+                        if (idx >= 0) this.students[idx] = { ...s };
+                    } else {
+                        s.id = Date.now();
+                        this.students.push({ ...s });
+                    }
+                    this.persist(STORAGE_KEYS.students, this.students);
+                    bootstrap.Modal.getInstance(document.getElementById('studentModal')).hide();
+                },
+                updateStudent(s) {
+                    const idx = this.students.findIndex(x => x.id === s.id);
+                    if (idx >= 0) { this.students.splice(idx, 1, { ...s }); this.persist(STORAGE_KEYS.students, this.students); }
+                },
+                deleteStudent(id) {
+                    if (!confirm('Delete this student?')) return;
+                    this.students = this.students.filter(s => s.id !== id);
+                    this.persist(STORAGE_KEYS.students, this.students);
+                    if (this.selectedStudent?.id === id) this.selectedStudent = null;
+                },
+                viewStudentDetails(s) { this.selectedStudent = s; window.scrollTo({ top: 0, behavior: 'smooth' }); },
+
+                // Attendance
+                attendanceStatusChipClass(status) {
+                    return {
+                        'badge rounded-pill bg-secondary': !status,
+                        'badge rounded-pill bg-success': status === 'Present',
+                        'badge rounded-pill bg-danger': status === 'Absent'
+                    };
+                },
+                todayAttendanceByStudent(studentId) {
+                    return this.attendance.find(a => a.studentId === studentId && a.date === this.todayStr) || null;
+                },
+                markPresent(student) {
+                    const now = new Date();
+                    const scheduled = new Date(); scheduled.setHours(CLASS_START.hour, CLASS_START.minute, 0, 0);
+                    const lateMins = Math.max(0, minutesDiff(now, scheduled));
+                    const record = { id: Date.now(), studentId: student.id, date: this.todayStr, status: 'Present', arrivalTime: timeStr(now), latenessInMinutes: lateMins, excuse: '', assignedPunishmentId: null };
+                    if (lateMins > 0) {
+                        this.modalCtx = { student, arrivalTime: record.arrivalTime, latenessInMinutes: lateMins, excuse: '', assignedPunishmentId: null, record };
+                        new bootstrap.Modal('#lateModal').show();
+                    } else {
+                        this.upsertAttendance(record);
+                    }
+                },
+                confirmLateSave() {
+                    const r = this.modalCtx.record;
+                    r.excuse = this.modalCtx.excuse; r.assignedPunishmentId = this.modalCtx.assignedPunishmentId;
+                    this.upsertAttendance(r);
+                    bootstrap.Modal.getInstance(document.getElementById('lateModal')).hide();
+                },
+                openAbsentModal(student) {
+                    this.modalCtx = { student, excuse: '', record: { id: Date.now(), studentId: student.id, date: this.todayStr, status: 'Absent', arrivalTime: null, latenessInMinutes: null, excuse: '', assignedPunishmentId: null } };
+                    new bootstrap.Modal('#absentModal').show();
+                },
+                confirmAbsentSave() {
+                    const r = this.modalCtx.record; r.excuse = this.modalCtx.excuse;
+                    this.upsertAttendance(r);
+                    bootstrap.Modal.getInstance(document.getElementById('absentModal')).hide();
+                },
+                upsertAttendance(rec) {
+                    const idx = this.attendance.findIndex(a => a.studentId === rec.studentId && a.date === rec.date);
+                    if (idx >= 0) this.attendance.splice(idx, 1, rec); else this.attendance.push(rec);
+                    this.persist(STORAGE_KEYS.attendance, this.attendance);
+                },
+                attendanceByStudent(id) { return this.attendance.filter(a => a.studentId === id).sort((a, b) => b.date.localeCompare(a.date)); },
+                attendanceByStudentThisWeek(id) { return this.attendanceThisWeek.filter(a => a.studentId === id); },
+
+                // Punishments CRUD
+                openPunishmentModal(p = null) { this.editingPunishment = p ? { ...p } : { punishmentId: null, name: '' }; new bootstrap.Modal('#punishmentModal').show(); },
+                savePunishment() {
+                    const p = this.editingPunishment; if (!p.name) return alert('Name required');
+                    if (p.punishmentId) {
+                        const idx = this.punishments.findIndex(x => x.punishmentId === p.punishmentId);
+                        if (idx >= 0) this.punishments[idx] = { ...p };
+                    } else {
+                        p.punishmentId = this.punishments.length ? Math.max(...this.punishments.map(x => x.punishmentId)) + 1 : 1;
+                        this.punishments.push({ ...p });
+                    }
+                    this.persist(STORAGE_KEYS.punishments, this.punishments);
+                    bootstrap.Modal.getInstance(document.getElementById('punishmentModal')).hide();
+                },
+                deletePunishment(id) { if (confirm('Delete punishment?')) { this.punishments = this.punishments.filter(p => p.punishmentId !== id); this.persist(STORAGE_KEYS.punishments, this.punishments); } },
+                punishmentName(id) { return this.punishments.find(p => p.punishmentId === id)?.name || '—'; },
+
+                // Rules CRUD
+                openRuleModal(r = null) { this.editingRule = r ? { ...r } : { ruleId: null, description: '' }; new bootstrap.Modal('#ruleModal').show(); },
+                saveRule() { const r = this.editingRule; if (!r.description) return alert('Description required'); if (r.ruleId) { const idx = this.rules.findIndex(x => x.ruleId === r.ruleId); if (idx >= 0) this.rules[idx] = { ...r }; } else { r.ruleId = this.rules.length ? Math.max(...this.rules.map(x => x.ruleId)) + 1 : 1; this.rules.push({ ...r }); } this.persist(STORAGE_KEYS.rules, this.rules); bootstrap.Modal.getInstance(document.getElementById('ruleModal')).hide(); },
+                deleteRule(id) { if (confirm('Delete rule?')) { this.rules = this.rules.filter(r => r.ruleId !== id); this.persist(STORAGE_KEYS.rules, this.rules); } },
+
+                // Progress
+                isDoneToday(studentId) { return !!this.progress.find(p => p.studentId === studentId && p.date === this.todayStr); },
+                toggleDoneToday(studentId) {
+                    const idx = this.progress.findIndex(p => p.studentId === studentId && p.date === this.todayStr);
+                    if (idx >= 0) this.progress.splice(idx, 1); else this.progress.push({ studentId, date: this.todayStr, done: true });
+
+                    const wk = toDateStr(this.weekStart);
+                    if (!this.weekBaselines[wk]) this.weekBaselines[wk] = {};
+                    if (this.weekBaselines[wk][studentId] == null) {
+                        const s = this.students.find(x => x.id === studentId);
+                        if (s) {
+                            this.weekBaselines[wk][studentId] = s.currentHifzPage;
+                        }
+                    }
+                    this.persist(STORAGE_KEYS.progress, this.progress);
+                    this.persist(STORAGE_KEYS.weekBaselines, this.weekBaselines);
+                },
+                weeklyBaselineForStudent(studentId) {
+                    const wk = toDateStr(this.weekStart);
+                    return this.weekBaselines[wk]?.[studentId];
+                },
+                weeklyCompletedForStudent(studentId) {
+                    return this.progress.filter(p => {
+                        const d = new Date(p.date);
+                        return p.studentId === studentId && d >= this.weekStart && d <= this.weekEnd;
+                    }).length;
+                },
+                weeklyTargetPageForStudent(studentId) {
+                    const baseline = this.weeklyBaselineForStudent(studentId);
+                    if (baseline == null) {
+                        const s = this.students.find(x => x.id === studentId);
+                        return (s?.currentHifzPage || 0) + this.weeklyCompletedForStudent(studentId);
+                    }
+                    return baseline + this.weeklyCompletedForStudent(studentId);
+                },
+
+                // Weekly Tests
+                initTestInputs() {
+                    this.testInputs = {};
+                    this.students.forEach(s => {
+                        this.testInputs[s.id] = { score: null, tajweedErrors: 0, fluency: 'Good', presentation: 'Good' };
+                    });
+                },
+                saveWeeklyTest() {
+                    if (!this.testDate) return alert('Please select a test date.');
+                    const results = Object.entries(this.testInputs)
+                        .map(([studentId, result]) => ({
+                            studentId: parseInt(studentId),
+                            score: result.score,
+                            tajweedErrors: result.tajweedErrors,
+                            fluency: result.fluency,
+                            presentation: result.presentation,
+                        }))
+                        .filter(r => r.score != null && r.score >= 0);
+
+                    if (!results.length) return alert("Please enter at least one student's score to save the test.");
+
+                    const existingTestIdx = this.tests.findIndex(t => t.date === this.testDate);
+                    if (existingTestIdx >= 0) {
+                        this.tests[existingTestIdx] = { date: this.testDate, results };
+                    } else {
+                        this.tests.push({ date: this.testDate, results });
+                    }
+
+                    this.persist(STORAGE_KEYS.tests, this.tests);
+                    alert(`Test for ${this.testDate} saved successfully.`);
+                    this.selectedTestDate = this.testDate;
+                },
+                testsByStudent(studentId) {
+                    const studentTests = [];
+                    this.tests.forEach(test => {
+                        const result = test.results.find(r => r.studentId === studentId);
+                        if (result) {
+                            studentTests.push({ date: test.date, ...result });
+                        }
+                    });
+                    return studentTests;
+                },
+
+                // General Helper
+                studentName(id) {
+                    return this.students.find(s => s.id === id)?.fullName || 'Unknown';
+                },
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+
+</html>
