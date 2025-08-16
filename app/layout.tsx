@@ -1,20 +1,16 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Noto_Sans_Ethiopic } from 'next/font/google';
 import { DataProvider } from "@/context/dataContext";
 import { NavProvider } from "@/context/nav-context";
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
+const noto = Noto_Sans_Ethiopic({
+    subsets: ['ethiopic'],
+    weight: ['600', '700'],
+    variable: '--font-noto',
 });
 
 export const metadata: Metadata = {
@@ -29,7 +25,14 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+            <body
+                className={`${noto.className} antialiased bg-background text-foreground`}
+                style={{
+                    WebkitTextSizeAdjust: '100%',
+                    WebkitTapHighlightColor: 'transparent',
+                    touchAction: 'manipulation',
+                }}
+            >
                 <DataProvider>
                     <NavProvider>
                         <ProtectedRoute>

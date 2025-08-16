@@ -1,10 +1,12 @@
+import { AttendanceStatus } from "./Student";
+
 export interface Attendance {
-    id: string; // UUID
-    studentId: string; // Foreign key to students table
-    date: string; // YYYY-MM-DD format
+    id: string;
+    student_id: string;
+    date: string;
     status: AttendanceStatus;
-    arrivalTime: string | null; // HH:MM:SS format
-    latenessInMinutes: number | null;
+    arrival_time: string | null;
+    lateness_in_minutes: number | null;
     excuse: string | null;
-    punishmentId: string | null; // Foreign key to punishments table
+    punishment_id: string | null;
 }

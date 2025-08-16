@@ -117,7 +117,7 @@ export default function UstadhsPage() {
                             <TableHead>Student</TableHead>
                             <TableHead>Family Name</TableHead>
                             <TableHead>Family Phone</TableHead>
-                            <TableHead>Added</TableHead>
+                            <TableHead>Current Page</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -141,7 +141,7 @@ export default function UstadhsPage() {
                                         {student.family_phone || 'No family phone available'}
                                     </TableCell>
                                     <TableCell>
-                                        {student.created_at ? format(new Date(student.created_at), 'MMM d, yyyy') : 'N/A'}
+                                        {student.current_hifz_page}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>

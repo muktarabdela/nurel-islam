@@ -3,10 +3,12 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { studentService } from '@/lib/servies/student';
 import { StudentModel } from '@/models/Student';
+import { Attendance } from '@/models/Attendance';
+import { attendanceService } from '@/lib/servies/attendace';
 
 type DataContextType = {
     students: StudentModel[];
-
+    attendance: Attendance[];
     loading: boolean;
     error: string | null;
     refreshData: () => Promise<void>;
@@ -16,7 +18,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
     const [students, setStudents] = useState<StudentModel[]>([]);
-
+    const [attendance, setAttendance] = useState<Attendance[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -26,11 +28,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
             setError(null);
 
             // Fetch all data in parallel
-            const [studentsData] = await Promise.all([
+            const [studentsData, attendanceData] = await Promise.all([
                 studentService.getAll(),
+                attendanceService.getAll(),
             ]);
 
             setStudents(studentsData);
+            setAttendance(attendanceData);
         } catch (err) {
             console.error('Error fetching data:', err);
             setError('Failed to fetch data. Please try again later.');
@@ -47,6 +51,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         <DataContext.Provider
             value={{
                 students,
+                attendance,
                 loading,
                 error,
                 refreshData: fetchAllData,
