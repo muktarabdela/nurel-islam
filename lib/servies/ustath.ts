@@ -159,5 +159,22 @@ export const ustathService = {
             throw err;
         }
     },
+    // get all
+    async getAll(): Promise<UstathModel[]> {
+        try {
+            const { data, error } = await supabase
+                .from(TABLE_NAME)
+                .select('*');
+
+            if (error) {
+                console.error("Supabase Select Error:", error);
+                throw new Error(`Failed to fetch data: ${error.message}`);
+            }
+            return data as UstathModel[];
+        } catch (err) {
+            console.error("Error fetching data:", err);
+            throw err;
+        }
+    },
 
 }
