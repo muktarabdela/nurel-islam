@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Users, CalendarCheck, BookOpen, ClipboardList, AlertTriangle, ListChecks } from 'lucide-react';
 import { useNav } from "@/context/nav-context";
+import { useAuth } from '@/hooks/useAuth';
+import { LogoutButton } from './auth/LogoutButton';
 
 const sidebarItems = [
     { name: 'Dashboard', href: '/', icon: <Menu className="h-4 w-4" /> },
@@ -20,6 +22,8 @@ const sidebarItems = [
 export function Sidebar() {
     const pathname = usePathname();
     const { isSidebarOpen, toggleSidebar, closeSidebar } = useNav();
+
+    const { isAuthenticated } = useAuth();
 
     // Close sidebar when a navigation item is clicked (mobile)
     const handleNavClick = () => {
@@ -73,6 +77,9 @@ export function Sidebar() {
                     })}
                 </span></div>
             </div>
+            {isAuthenticated && (
+                <LogoutButton />
+            )}
         </div>
     );
 

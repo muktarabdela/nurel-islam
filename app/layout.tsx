@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { DataProvider } from "@/context/dataContext";
 import { NavProvider } from "@/context/nav-context";
-import { Sidebar } from "@/components/sidebar";
+import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -27,19 +29,15 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-            >
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 <DataProvider>
                     <NavProvider>
-                        <div className="flex min-h-screen">
-                            <Sidebar />
-                            <main className="flex-1 lg:pl-[280px] min-h-screen bg-muted/40">
-                                <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
-                                    {children}
-                                </div>
-                            </main>
-                        </div>
+                        <ProtectedRoute>
+                            <AuthenticatedLayout>
+                                {children}
+                                <Toaster />
+                            </AuthenticatedLayout>
+                        </ProtectedRoute>
                     </NavProvider>
                 </DataProvider>
             </body>

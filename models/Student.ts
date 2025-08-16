@@ -1,12 +1,12 @@
 export interface StudentModel {
-    id: string; // UUID
-    userId: string; // Foreign key to users table
-    createdAt: string; // ISO 8601 timestamp string
-    fullName: string;
-    familyName: string | null;
-    familyPhone: string | null;
-    currentHifzPage: number;
-    isActive: boolean;
+    id: string;
+    added_by: string;
+    full_name: string;
+    family_name: string | null;
+    family_phone: string | null;
+    current_hifz_page: number;
+    is_active: boolean;
+    created_at: string;
 }
 
 

@@ -1,25 +1,29 @@
-import { StudentModel } from "@/models/Student";
-import { supabase } from "../supabase";
+import { supabase } from '@/lib/supabase';
+import { StudentModel } from '@/models/Student';
 
-const TABLE_NAME = "students";
+export type CreateStudentInput = Omit<StudentModel, 'id' | 'created_at'>;
+export type UpdateStudentInput = Partial<CreateStudentInput>;
+
+const TABLE_NAME = 'students';
 
 export const studentService = {
-    // add new user
-    async addStudent(student: StudentModel) {
+    // Create a new ustadh
+    async create(student: CreateStudentInput): Promise<StudentModel> {
         const { data, error } = await supabase
             .from(TABLE_NAME)
-            .insert([student])
+            .insert(student)
             .select()
             .single();
 
         if (error) {
-            throw error;
+            console.error('Error creating student:', error);
+            throw new Error(error.message);
         }
 
         return data;
     },
 
-    // get all users
+    // Get all ustadhs
     async getAll(): Promise<StudentModel[]> {
         const { data, error } = await supabase
             .from(TABLE_NAME)
@@ -27,14 +31,14 @@ export const studentService = {
             .order('full_name', { ascending: true });
 
         if (error) {
-            console.error('Error fetching users:', error);
+            console.error('Error fetching students:', error);
             throw new Error(error.message);
         }
 
         return data || [];
     },
 
-    // get user by id
+    // Get a single ustadh by ID
     async getById(id: string): Promise<StudentModel | null> {
         const { data, error } = await supabase
             .from(TABLE_NAME)
@@ -43,43 +47,62 @@ export const studentService = {
             .single();
 
         if (error) {
-            console.error('Error fetching user:', error);
-            return null;
-        }
-
-        return data || null;
-    },
-    // update user
-    async updateUser(user: StudentModel) {
-        const { data, error } = await supabase
-            .from(TABLE_NAME)
-            .update(user)
-            .eq('id', user.id)
-            .select()
-            .single();
-
-        if (error) {
-            throw error;
+            if (error.code === 'PGRST116') { // Not found
+                return null;
+            }
+            console.error('Error fetching ustadh:', error);
+            throw new Error(error.message);
         }
 
         return data;
     },
-    // delete user
-    async delete(id: string) {
-        try {
-            const { error } = await supabase
-                .from(TABLE_NAME)
-                .delete()
-                .eq('id', id);
-            if (error) {
-                console.error('Error deleting user:', error);
-                throw new Error(error.message);
-            }
-            return true;
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            throw error;
+
+    // Update an ustadh
+    async update(id: string, updates: UpdateStudentInput): Promise<StudentModel> {
+        const { data, error } = await supabase
+            .from(TABLE_NAME)
+            .update({
+                ...updates,
+                updatedAt: new Date().toISOString(),
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error updating ustadh:', error);
+            throw new Error(error.message);
+        }
+
+        return data;
+    },
+
+    // Delete an ustadh
+    async delete(id: string): Promise<void> {
+        const { error } = await supabase
+            .from(TABLE_NAME)
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting ustadh:', error);
+            throw new Error(error.message);
         }
     },
 
-}
+    // Search ustadhs by name
+    async search(query: string): Promise<StudentModel[]> {
+        const { data, error } = await supabase
+            .from(TABLE_NAME)
+            .select('*')
+            .ilike('name', `%${query}%`)
+            .order('name', { ascending: true });
+
+        if (error) {
+            console.error('Error searching ustadhs:', error);
+            throw new Error(error.message);
+        }
+
+        return data || [];
+    },
+};
