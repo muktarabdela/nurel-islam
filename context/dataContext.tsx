@@ -5,13 +5,19 @@ import { studentService } from '@/lib/servies/student';
 import { StudentModel } from '@/models/Student';
 import { Attendance } from '@/models/Attendance';
 import { attendanceService } from '@/lib/servies/attendace';
+import { HifzProgress } from '@/models/HifzProgress';
+import { hifzProgressService } from '@/lib/servies/hifz-progress';
 
 type DataContextType = {
     students: StudentModel[];
     attendance: Attendance[];
+    hifzProgress: HifzProgress[];
     loading: boolean;
     error: string | null;
     refreshData: () => Promise<void>;
+    recordHifzProgress: (progress: Omit<HifzProgress, 'id'>) => Promise<HifzProgress>;
+    getStudentHifzProgress: (studentId: string) => Promise<HifzProgress[]>;
+    getWeeklyHifzProgress: (studentId: string, startDate: string, endDate: string) => Promise<HifzProgress[]>;
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -19,6 +25,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export function DataProvider({ children }: { children: ReactNode }) {
     const [students, setStudents] = useState<StudentModel[]>([]);
     const [attendance, setAttendance] = useState<Attendance[]>([]);
+    const [hifzProgress, setHifzProgress] = useState<HifzProgress[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -28,18 +35,49 @@ export function DataProvider({ children }: { children: ReactNode }) {
             setError(null);
 
             // Fetch all data in parallel
-            const [studentsData, attendanceData] = await Promise.all([
+            const [studentsData, attendanceData, progressData] = await Promise.all([
                 studentService.getAll(),
                 attendanceService.getAll(),
+                hifzProgressService.getProgressForDate(new Date().toISOString().split('T')[0])
             ]);
 
             setStudents(studentsData);
             setAttendance(attendanceData);
+            setHifzProgress(progressData);
         } catch (err) {
             console.error('Error fetching data:', err);
-            setError('Failed to fetch data. Please try again later.');
+            setError(err instanceof Error ? err.message : 'Failed to fetch data');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const recordHifzProgress = async (progress: Omit<HifzProgress, 'id'>) => {
+        try {
+            const newProgress = await hifzProgressService.recordProgress(progress);
+            await fetchAllData(); // Refresh all data
+            return newProgress;
+        } catch (err) {
+            console.error('Error recording Hifz progress:', err);
+            throw err;
+        }
+    };
+
+    const getStudentHifzProgress = async (studentId: string) => {
+        try {
+            return await hifzProgressService.getStudentProgress(studentId);
+        } catch (err) {
+            console.error('Error fetching student Hifz progress:', err);
+            throw err;
+        }
+    };
+
+    const getWeeklyHifzProgress = async (studentId: string, startDate: string, endDate: string) => {
+        try {
+            return await hifzProgressService.getWeeklyProgress(studentId, startDate, endDate);
+        } catch (err) {
+            console.error('Error fetching weekly Hifz progress:', err);
+            throw err;
         }
     };
 
@@ -47,16 +85,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
         fetchAllData();
     }, []);
 
+    const value = {
+        students,
+        attendance,
+        hifzProgress,
+        loading,
+        error,
+        refreshData: fetchAllData,
+        recordHifzProgress,
+        getStudentHifzProgress,
+        getWeeklyHifzProgress,
+    };
+
     return (
-        <DataContext.Provider
-            value={{
-                students,
-                attendance,
-                loading,
-                error,
-                refreshData: fetchAllData,
-            }}
-        >
+        <DataContext.Provider value={value}>
             {children}
         </DataContext.Provider>
     );
