@@ -15,9 +15,9 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Loader2, RefreshCw, Users, XCircle } from 'lucide-react';
 
 // Models
-import { Attendance } from '@/models/Attendance';
 import { AttendanceStatus, StudentModel } from '@/models/Student';
 import { attendanceService } from '@/lib/servies/attendace';
+import { LoadingScreen } from '@/components/shared/loading';
 
 
 export default function AttendancePage() {
@@ -36,7 +36,7 @@ export default function AttendancePage() {
     const todayGregorian = new Date();
 
     const todayEthiopian = EthDateTime.fromEuropeanDate(todayGregorian);
-    console.log("todayEthiopian", todayEthiopian)
+
     const todayEthiopianForDisplay = `${ethiopianMonths[todayEthiopian.month - 1]} ${todayEthiopian.date}, ${todayEthiopian.year}`;
     const todayGregorianForDB = format(todayGregorian, 'yyyy-MM-dd');
 
@@ -147,6 +147,10 @@ export default function AttendancePage() {
     const presentCount = todaysAttendance.filter(a => a.status === 'Present').length;
     const absentCount = todaysAttendance.filter(a => a.status === 'Absent').length;
     const totalStudents = students.length;
+
+    // if (loading) {
+    //     return <LoadingScreen />;
+    // }
 
     return (
         <div className="container mx-auto py-6 space-y-6">

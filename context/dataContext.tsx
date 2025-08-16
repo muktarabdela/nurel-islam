@@ -21,9 +21,7 @@ type DataContextType = {
     loading: boolean;
     error: string | null;
     refreshData: () => Promise<void>;
-    recordHifzProgress: (progress: Omit<HifzProgress, 'id'>) => Promise<HifzProgress>;
-    getStudentHifzProgress: (studentId: string) => Promise<HifzProgress[]>;
-    getWeeklyHifzProgress: (studentId: string, startDate: string, endDate: string) => Promise<HifzProgress[]>;
+
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -46,7 +44,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             const [studentsData, attendanceData, progressData, punishmentsData, ustathsData] = await Promise.all([
                 studentService.getAll(),
                 attendanceService.getAll(),
-                hifzProgressService.getProgressForDate(new Date().toISOString().split('T')[0]),
+                hifzProgressService.getAll(),
                 punishmentService.getAll(),
                 ustathService.getAll()
             ]);
@@ -64,35 +62,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const recordHifzProgress = async (progress: Omit<HifzProgress, 'id'>) => {
-        try {
-            const newProgress = await hifzProgressService.recordProgress(progress);
-            await fetchAllData(); // Refresh all data
-            return newProgress;
-        } catch (err) {
-            console.error('Error recording Hifz progress:', err);
-            throw err;
-        }
-    };
-
-    const getStudentHifzProgress = async (studentId: string) => {
-        try {
-            return await hifzProgressService.getStudentProgress(studentId);
-        } catch (err) {
-            console.error('Error fetching student Hifz progress:', err);
-            throw err;
-        }
-    };
-
-    const getWeeklyHifzProgress = async (studentId: string, startDate: string, endDate: string) => {
-        try {
-            return await hifzProgressService.getWeeklyProgress(studentId, startDate, endDate);
-        } catch (err) {
-            console.error('Error fetching weekly Hifz progress:', err);
-            throw err;
-        }
-    };
-
     useEffect(() => {
         fetchAllData();
     }, []);
@@ -106,9 +75,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         loading,
         error,
         refreshData: fetchAllData,
-        recordHifzProgress,
-        getStudentHifzProgress,
-        getWeeklyHifzProgress,
     };
 
     return (

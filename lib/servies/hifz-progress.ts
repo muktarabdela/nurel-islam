@@ -38,20 +38,20 @@ export const hifzProgressService = {
         return data || [];
     },
 
-    async getStudentProgress(studentId: string): Promise<HifzProgress[]> {
+    // get all hifz progress
+    async getAll(): Promise<HifzProgress[]> {
         const { data, error } = await supabase
             .from('hifz_progress')
-            .select('*')
-            .eq('student_id', studentId)
-            .order('date', { ascending: false });
+            .select('*');
 
         if (error) {
-            console.error('Error fetching student Hifz progress:', error);
+            console.error('Error fetching Hifz progress:', error);
             throw new Error(error.message);
         }
 
         return data || [];
     },
+
 
     async getWeeklyProgress(studentId: string, startDate: string, endDate: string): Promise<HifzProgress[]> {
         const { data, error } = await supabase

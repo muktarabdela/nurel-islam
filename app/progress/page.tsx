@@ -8,6 +8,8 @@ import { Check, Square } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useData } from "@/context/dataContext";
 import { HifzProgress } from "@/models/HifzProgress";
+import { LoadingScreen } from "@/components/shared/loading";
+import { hifzProgressService } from "@/lib/servies/hifz-progress";
 
 // Get today's date in YYYY-MM-DD format
 const today = new Date();
@@ -30,11 +32,10 @@ export default function ProgressPage() {
         students,
         hifzProgress,
         loading,
-        recordHifzProgress,
-        getStudentHifzProgress,
-        getWeeklyHifzProgress,
         refreshData
     } = useData();
+
+    console.log("hifzProgress", hifzProgress);
 
     const [weeklyBaseline, setWeeklyBaseline] = useState<Record<string, number>>({});
     const [weeklyProgress, setWeeklyProgress] = useState<Record<string, HifzProgress[]>>({});
@@ -53,13 +54,10 @@ export default function ProgressPage() {
 
         if (todaysProgress) {
             // If already marked for today, delete the progress
-            await recordHifzProgress({
-                ...todaysProgress,
-                pages_completed: 0
-            });
+            await hifzProgressService.deleteProgress(todaysProgress.id);
         } else {
             // Mark as completed for today (1 page)
-            await recordHifzProgress({
+            await hifzProgressService.recordProgress({
                 student_id: studentId,
                 date: todayStr,
                 pages_completed: 1,
@@ -97,6 +95,10 @@ export default function ProgressPage() {
 
     // Load weekly progress for all students
     useEffect(() => {
+        const getStudentHifzProgress = (studentId: string) => {
+            return hifzProgress.filter(p => p.student_id === studentId);
+        };
+
         const loadWeeklyProgress = async () => {
             const firstDay = new Date(today);
             firstDay.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
@@ -109,7 +111,7 @@ export default function ProgressPage() {
             const progressMap: Record<string, HifzProgress[]> = {};
 
             for (const student of students) {
-                const progress = await getStudentHifzProgress(student.id);
+                const progress = getStudentHifzProgress(student.id);
                 progressMap[student.id] = progress.filter(p =>
                     p.date >= startDate && p.date <= endDate && p.pages_completed > 0
                 );
@@ -121,10 +123,10 @@ export default function ProgressPage() {
         if (students.length > 0) {
             loadWeeklyProgress();
         }
-    }, [students, getStudentHifzProgress]);
+    }, [students, hifzProgress]);
 
     if (loading) {
-        return <div className="container mx-auto p-4">Loading...</div>;
+        return <LoadingScreen />;
     }
 
     return (
