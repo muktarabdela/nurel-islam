@@ -10,7 +10,7 @@ export interface StudentModel {
 }
 
 
-export type AttendanceStatus = 'Present' | 'Absent' | 'Not Marked';
+export type AttendanceStatus = 'Present' | 'Absent' | 'Not Marked' | 'ተገኝቷል' | 'አልመጣም';
 
 /**
  * Corresponds to the 'feedback_rating' enum in the database.

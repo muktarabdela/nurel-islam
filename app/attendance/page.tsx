@@ -19,7 +19,6 @@ import { AttendanceStatus, StudentModel } from '@/models/Student';
 import { attendanceService } from '@/lib/servies/attendace';
 
 // Components
-import { DetailedAttendance } from '@/components/features/attendance/DetailedAttendance';
 
 export default function AttendancePage() {
     const { students, attendance, loading, refreshData } = useData();
