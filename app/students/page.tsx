@@ -101,10 +101,10 @@ export default function StudentsPage() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleView(student)}>
+                {/* <DropdownMenuItem onClick={() => handleView(student)}>
                     <Eye className="mr-2 h-4 w-4" />
                     View
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem onClick={() => handleEdit(student)}>
                     <Edit className="mr-2 h-4 w-4" />
                     Edit

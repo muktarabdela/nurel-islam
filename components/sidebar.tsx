@@ -15,8 +15,8 @@ const sidebarItems = [
     { name: 'የተማሪዎች መቆጣጠሪያ', href: '/attendance', icon: <CalendarCheck className="h-4 w-4" /> },
     { name: 'የ ሂፍዝ መመዝገቢያ', href: '/progress', icon: <BookOpen className="h-4 w-4" /> },
     { name: 'ሳምንታዊ ፈተና', href: '/tests', icon: <ClipboardList className="h-4 w-4" /> },
-    { name: 'ቅጣቶች', href: '/punishments', icon: <AlertTriangle className="h-4 w-4" /> },
-    { name: 'ህጎች', href: '/rules', icon: <ListChecks className="h-4 w-4" /> },
+    // { name: 'ቅጣቶች', href: '/punishments', icon: <AlertTriangle className="h-4 w-4" /> },
+    // { name: 'ህጎች', href: '/rules', icon: <ListChecks className="h-4 w-4" /> },
 ];
 
 export function Sidebar() {
@@ -68,7 +68,7 @@ export function Sidebar() {
                     ))}
                 </div>
             </div>
-            <div className="px-6 py-2 text-sm text-muted-foreground">
+            {/* <div className="px-6 py-2 text-sm text-muted-foreground">
                 <div>Class time: <span className="font-medium">20:30</span> daily</div>
                 <div>Today: <span className="font-medium">
                     {new Date().toLocaleDateString('en-US', {
@@ -78,7 +78,7 @@ export function Sidebar() {
                         day: 'numeric'
                     })}
                 </span></div>
-            </div>
+            </div> */}
             {isAuthenticated && (
                 <LogoutButton />
             )}

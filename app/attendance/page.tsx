@@ -158,22 +158,22 @@ export default function AttendancePage() {
             return (
                 <div className="flex justify-end gap-2">
                     <Button
-                        variant="outline"
+                        variant="default"
                         size="sm"
                         onClick={() => handleMarkPresent(student.id)}
                         disabled={isSubmitting}
-                        className="hover:bg-green-500 hover:text-white"
+                        className="hover:primary hover:text-white"
                     >
-                        <CheckCircle className="mr-2 h-4 w-4" /> Present
+                        <CheckCircle className="mr-2 h-4 w-4" /> ተግኝቷል
                     </Button>
                     <Button
-                        variant="outline"
+                        variant="destructive"
                         size="sm"
                         onClick={() => handleOpenAbsenceModal(student)}
                         disabled={isSubmitting}
                         className="hover:bg-red-500 hover:text-white"
                     >
-                        <XCircle className="mr-2 h-4 w-4" /> Absent
+                        <XCircle className="mr-2 h-4 w-4" /> አልመጣም
                     </Button>
                 </div>
             );
@@ -206,27 +206,27 @@ export default function AttendancePage() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <Card>
+                <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                        <CardTitle className="text-sm font-medium">አጠማሪ የጠቃሚ በትክክል</CardTitle>
                         <Users className="h-5 w-5 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{totalStudents}</div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Present Today</CardTitle>
+                        <CardTitle className="text-sm font-medium">ዛሪ የቀሩ</CardTitle>
                         <CheckCircle className="h-5 w-5 text-green-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{presentCount}</div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Absent Today</CardTitle>
+                        <CardTitle className="text-sm font-medium">ዛሪ የተገኙ</CardTitle>
                         <XCircle className="h-5 w-5 text-red-500" />
                     </CardHeader>
                     <CardContent>
@@ -236,7 +236,7 @@ export default function AttendancePage() {
             </div>
 
             {/* Attendance List */}
-            <Card className="shadow-md">
+            <Card className="shadow-sm hover:shadow-md transition-shadow border-0">
                 <CardHeader className="border-b">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
@@ -256,15 +256,14 @@ export default function AttendancePage() {
                         <div className="flex items-center justify-center h-60"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
                     ) : (
                         <>
-                            {/* Desktop Table View */}
-                            <div className="hidden md:block">
-                                <Table>
+                            <div className="overflow-x-auto">
+                                <Table className="min-w-full"> {/* Use min-w-full to ensure it takes at least the full width */}
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="w-[250px]">Student Name</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Lateness (minutes)</TableHead>
-                                            <TableHead className="text-right pr-6">Actions</TableHead>
+                                            <TableHead className="w-[250px] whitespace-nowrap">የተማሪ ስም</TableHead>
+                                            <TableHead className="whitespace-nowrap">ሁኔታ</TableHead>
+                                            <TableHead className="whitespace-nowrap">ያረፈደው (ደቂቃ)</TableHead>
+                                            <TableHead className="text-right pr-6 whitespace-nowrap">ተግባሮች</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -273,9 +272,15 @@ export default function AttendancePage() {
                                             if (!student) return null;
                                             return (
                                                 <TableRow key={record.student_id}>
-                                                    <TableCell className="font-medium">{student.full_name}</TableCell>
-                                                    <TableCell>{getStatusBadge(record.status)}</TableCell>
-                                                    <TableCell>
+                                                    <TableCell className="font-medium whitespace-nowrap">{student.full_name}</TableCell>
+                                                    <TableCell className="whitespace-nowrap">
+                                                        {record.status === 'Present'
+                                                            ? getStatusBadge('ተገኝቷል')
+                                                            : record.status === 'Absent'
+                                                                ? getStatusBadge('አልመጣም')
+                                                                : getStatusBadge(record.status)}
+                                                    </TableCell>
+                                                    <TableCell className="whitespace-nowrap">
                                                         {record.lateness_in_minutes != null ? `${record.lateness_in_minutes} min` : <span className="text-muted-foreground">N/A</span>}
                                                     </TableCell>
                                                     <TableCell className="text-right pr-6">
@@ -288,75 +293,15 @@ export default function AttendancePage() {
                                 </Table>
                             </div>
 
-                            {/* Mobile Card View */}
-                            <div className="grid gap-3 p-2 sm:p-4 md:hidden">
-                                {todaysAttendance.map(record => {
-                                    const student = students.find(s => s.id === record.student_id);
-                                    if (!student) return null;
-                                    return (
-                                        <Card key={record.student_id} className="shadow-sm">
-                                            <CardHeader className="pb-2">
-                                                <div className="flex items-center justify-between">
-                                                    <CardTitle className="text-sm sm:text-base">{student.full_name}</CardTitle>
-                                                    {getStatusBadge(record.status)}
-                                                </div>
-                                            </CardHeader>
-                                            <CardContent className="pt-0">
-                                                {record.status === 'Present' && (
-                                                    <div className="flex items-center text-xs sm:text-sm text-muted-foreground mb-3">
-                                                        <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                                                        <span>Lateness: {record.lateness_in_minutes} min</span>
-                                                    </div>
-                                                )}
-                                                <div className="space-y-2">
-                                                    {record.status === 'Not Marked' ? (
-                                                        <>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleMarkPresent(student.id)}
-                                                                disabled={isSubmitting}
-                                                                className="w-full hover:bg-green-500 hover:text-white"
-                                                            >
-                                                                <CheckCircle className="mr-2 h-4 w-4" /> Present
-                                                            </Button>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleOpenAbsenceModal(student)}
-                                                                disabled={isSubmitting}
-                                                                className="w-full hover:bg-red-500 hover:text-white"
-                                                            >
-                                                                <XCircle className="mr-2 h-4 w-4" /> Absent
-                                                            </Button>
-                                                        </>
-                                                    ) : (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleDeleteAttendance(record.id)}
-                                                            disabled={isSubmitting}
-                                                            className="w-full text-muted-foreground hover:text-destructive justify-start px-0"
-                                                        >
-                                                            <Trash2 className="h-4 w-4 mr-2" />
-                                                            Delete Attendance
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    );
-                                })}
-                            </div>
                         </>
                     )}
                 </CardContent>
             </Card>
 
             {/* Detailed Attendance Section */}
-            <div className="mt-8">
+            {/* <div className="mt-8">
                 <DetailedAttendance students={students} attendance={attendance} />
-            </div>
+            </div> */}
 
             {/* Absence Reason Dialog */}
             <Dialog open={isAbsenceModalOpen} onOpenChange={setIsAbsenceModalOpen}>

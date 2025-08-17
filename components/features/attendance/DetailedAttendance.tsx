@@ -42,7 +42,7 @@ export function DetailedAttendance({ students, attendance }: DetailedAttendanceP
     const studentMap = useMemo(() => new Map(students.map(s => [s.id, s.full_name])), [students]);
 
     return (
-        <Card>
+        <Card className="border-0">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
