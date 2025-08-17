@@ -13,15 +13,18 @@ export function middleware(request: NextRequest) {
     );
 
     // Get the token from cookies
-    const token = request.cookies.get('ustathToken');
+    const token = request.cookies.get('ustathToken')?.value;
+    console.log("token from cookies:", token);
 
     // If trying to access a protected route without a token, redirect to login
     if (!isPublicPath && !token) {
+        console.log("No token found, redirecting to login");
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
     // If already logged in and trying to access login/register, redirect to home
     if (isPublicPath && token) {
+        console.log("Already logged in, redirecting to home");
         return NextResponse.redirect(new URL('/', request.url));
     }
 

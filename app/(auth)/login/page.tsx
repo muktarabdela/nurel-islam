@@ -37,7 +37,8 @@ export default function UstathLogin() {
                 // Store ustath session
                 localStorage.setItem('ustathToken', 'authenticated');
                 localStorage.setItem('ustathData', JSON.stringify(ustath));
-
+                // This will set the cookie that the middleware checks
+                document.cookie = 'ustathToken=authenticated; path=/; max-age=86400'; // 24 hours
                 // Force a full page reload to ensure all auth state is properly set
                 window.location.href = redirectTo;
             } else {
