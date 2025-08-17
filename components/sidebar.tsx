@@ -12,7 +12,7 @@ import { LogoutButton } from './auth/LogoutButton';
 const sidebarItems = [
     { name: 'ዋና ማውጫ', href: '/', icon: <Menu className="h-4 w-4" /> },
     { name: 'ተማሪዎች', href: '/students', icon: <Users className="h-4 w-4" /> },
-    { name: '', href: '/attendance', icon: <CalendarCheck className="h-4 w-4" /> },
+    { name: 'የተማሪዎች መቆጣጠሪያ', href: '/attendance', icon: <CalendarCheck className="h-4 w-4" /> },
     { name: 'የ ሂፍዝ መመዝገቢያ', href: '/progress', icon: <BookOpen className="h-4 w-4" /> },
     { name: 'ሳምንታዊ ፈተና', href: '/tests', icon: <ClipboardList className="h-4 w-4" /> },
     { name: 'ቅጣቶች', href: '/punishments', icon: <AlertTriangle className="h-4 w-4" /> },

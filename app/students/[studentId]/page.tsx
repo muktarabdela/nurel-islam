@@ -1,30 +1,36 @@
 "use client";
 
 import { useData } from "@/context/dataContext";
-import { StudentModel } from "@/models/Student";
 import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, BookOpen, CalendarCheck, ClipboardList, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { weeklyTestService } from "@/lib/servies/test";
-import { toast } from "sonner";
+import { StudentModel } from "@/models/Student";
+import { WeeklyTest } from "@/models/WeeklyTest";
+import { PunishmentModel } from "@/models/Punishment";
 
-export default function StudentPage({ params }: { params: { studentId: string } }) {
+type StudentPageProps = {
+    params: {
+        studentId: string;
+    };
+    searchParams?: { [key: string]: string | string[] | undefined };
+};
+
+export default function StudentPage({ params }: StudentPageProps) {
     const { studentId } = params;
     const { students, attendance, hifzProgress, weeklyTests, punishments, loading } = useData();
 
-    const student = students?.find((s) => s.id === studentId);
+    const student = students?.find((s: StudentModel) => s.id === studentId);
     const studentAttendance = attendance?.filter(a => a.student_id === studentId) || [];
     const studentHifzProgress = hifzProgress?.filter(h => h.student_id === studentId) || [];
-
-    // This filter now works correctly because weeklyTests includes test_results
-    const studentTests = weeklyTests?.filter(t => t.test_results?.some(r => r.student_id === studentId)) || [];
-
-    const studentPunishments = punishments?.filter(p => p.student_id === studentId) || [];
-
+    const studentTests = weeklyTests?.filter((t: WeeklyTest) =>
+        t.test_results?.some((r: any) => r.student_id === studentId)
+    ) || [];
+    const studentPunishments = punishments?.filter((p: PunishmentModel) =>
+        p.student_id === studentId
+    ) || [];
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
