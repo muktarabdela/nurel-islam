@@ -196,18 +196,18 @@ export default function AttendancePage() {
 
 
     return (
-        <div className="container mx-auto py-8 px-4 md:px-6">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">Attendance Management</h1>
-                <p className="text-muted-foreground mt-1">
-                    Manage and track student attendance for {todayEthiopianForDisplay}
+        <div className="container mx-auto py-4 sm:py-8 px-3 sm:px-4 md:px-6">
+            <header className="mb-6">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Attendance Management</h1>
+                <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                    {todayEthiopianForDisplay}
                 </p>
             </header>
 
             {/* Stats Cards */}
-            <div className="grid gap-6 md:grid-cols-3 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Students</CardTitle>
                         <Users className="h-5 w-5 text-muted-foreground" />
                     </CardHeader>
@@ -216,7 +216,7 @@ export default function AttendancePage() {
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Present Today</CardTitle>
                         <CheckCircle className="h-5 w-5 text-green-500" />
                     </CardHeader>
@@ -225,7 +225,7 @@ export default function AttendancePage() {
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Absent Today</CardTitle>
                         <XCircle className="h-5 w-5 text-red-500" />
                     </CardHeader>
@@ -289,26 +289,60 @@ export default function AttendancePage() {
                             </div>
 
                             {/* Mobile Card View */}
-                            <div className="grid gap-4 p-4 md:hidden">
+                            <div className="grid gap-3 p-2 sm:p-4 md:hidden">
                                 {todaysAttendance.map(record => {
                                     const student = students.find(s => s.id === record.student_id);
                                     if (!student) return null;
                                     return (
                                         <Card key={record.student_id} className="shadow-sm">
-                                            <CardHeader>
+                                            <CardHeader className="pb-2">
                                                 <div className="flex items-center justify-between">
-                                                    <CardTitle className="text-base">{student.full_name}</CardTitle>
+                                                    <CardTitle className="text-sm sm:text-base">{student.full_name}</CardTitle>
                                                     {getStatusBadge(record.status)}
                                                 </div>
                                             </CardHeader>
-                                            <CardContent>
+                                            <CardContent className="pt-0">
                                                 {record.status === 'Present' && (
-                                                    <div className="flex items-center text-sm text-muted-foreground mb-4">
-                                                        <Clock className="h-4 w-4 mr-2" />
+                                                    <div className="flex items-center text-xs sm:text-sm text-muted-foreground mb-3">
+                                                        <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                                                         <span>Lateness: {record.lateness_in_minutes} min</span>
                                                     </div>
                                                 )}
-                                                {renderActions(record, student)}
+                                                <div className="space-y-2">
+                                                    {record.status === 'Not Marked' ? (
+                                                        <>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleMarkPresent(student.id)}
+                                                                disabled={isSubmitting}
+                                                                className="w-full hover:bg-green-500 hover:text-white"
+                                                            >
+                                                                <CheckCircle className="mr-2 h-4 w-4" /> Present
+                                                            </Button>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleOpenAbsenceModal(student)}
+                                                                disabled={isSubmitting}
+                                                                className="w-full hover:bg-red-500 hover:text-white"
+                                                            >
+                                                                <XCircle className="mr-2 h-4 w-4" /> Absent
+                                                            </Button>
+                                                        </>
+                                                    ) : (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDeleteAttendance(record.id)}
+                                                            disabled={isSubmitting}
+                                                            className="w-full text-muted-foreground hover:text-destructive justify-start px-0"
+                                                        >
+                                                            <Trash2 className="h-4 w-4 mr-2" />
+                                                            Delete Attendance
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </CardContent>
                                         </Card>
                                     );
