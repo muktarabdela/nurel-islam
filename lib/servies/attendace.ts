@@ -4,7 +4,6 @@ import { Attendance } from '@/models/Attendance';
 
 export const attendanceService = {
     async markAttendance(attendance: Omit<Attendance, 'id'>): Promise<Attendance> {
-        // Format arrival_time to HH:MM:SS if it exists
         const formattedAttendance = {
             ...attendance,
             arrival_time: attendance.arrival_time
@@ -60,4 +59,15 @@ export const attendanceService = {
 
         return data || [];
     },
-};
+    async deleteAttendance(id: string): Promise<void> {
+        const { error } = await supabase
+            .from('attendance')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting attendance:', error);
+            throw new Error(error.message);
+        }
+    },
+}

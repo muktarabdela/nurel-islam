@@ -57,7 +57,6 @@ export const punishmentService = {
             .from(TABLE_NAME)
             .update({
                 ...updates,
-                updatedAt: new Date().toISOString(),
             })
             .eq('id', id)
             .select()

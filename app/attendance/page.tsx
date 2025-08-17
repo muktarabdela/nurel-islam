@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 
 // Icons
-import { CheckCircle, Loader2, RefreshCw, Users, XCircle } from 'lucide-react';
+import { CheckCircle, Loader2, RefreshCw, Trash2, Users, XCircle } from 'lucide-react';
 
 // Models
 import { AttendanceStatus, StudentModel } from '@/models/Student';
@@ -143,6 +143,17 @@ export default function AttendancePage() {
             setIsSubmitting(false);
         }
     };
+    const handleDeleteAttendance = async (id: string) => {
+        setIsSubmitting(true);
+        try {
+            await attendanceService.deleteAttendance(id);
+            await refreshData();
+        } catch (error) {
+            console.error("Failed to delete attendance:", error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const presentCount = todaysAttendance.filter(a => a.status === 'Present').length;
     const absentCount = todaysAttendance.filter(a => a.status === 'Absent').length;
@@ -251,6 +262,15 @@ export default function AttendancePage() {
                                                     >
                                                         <XCircle className="mr-2 h-4 w-4" /> Absent
                                                     </Button>
+                                                    {record.status !== 'Not Marked' && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleDeleteAttendance(record.id)}
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                        </Button>
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         );
