@@ -11,6 +11,8 @@ import { PunishmentModel } from '@/models/Punishment';
 import { punishmentService } from '@/lib/servies/punishment';
 import { UstathModel } from '@/models/ustath';
 import { ustathService } from '@/lib/servies/ustath';
+import { WeeklyTest } from '@/models/WeeklyTest';
+import { weeklyTestService } from '@/lib/servies/test';
 
 type DataContextType = {
     students: StudentModel[];
@@ -18,6 +20,7 @@ type DataContextType = {
     hifzProgress: HifzProgress[];
     punishments: PunishmentModel[];
     ustaths: UstathModel[];
+    weeklyTests: WeeklyTest[];
     loading: boolean;
     error: string | null;
     refreshData: () => Promise<void>;
@@ -32,6 +35,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [hifzProgress, setHifzProgress] = useState<HifzProgress[]>([]);
     const [punishments, setPunishments] = useState<PunishmentModel[]>([]);
     const [ustaths, setUstaths] = useState<UstathModel[]>([]);
+    const [weeklyTests, setWeeklyTests] = useState<WeeklyTest[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -41,12 +45,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
             setError(null);
 
             // Fetch all data in parallel
-            const [studentsData, attendanceData, progressData, punishmentsData, ustathsData] = await Promise.all([
+            const [studentsData, attendanceData, progressData, punishmentsData, ustathsData, weeklyTestsData] = await Promise.all([
                 studentService.getAll(),
                 attendanceService.getAll(),
                 hifzProgressService.getAll(),
                 punishmentService.getAll(),
-                ustathService.getAll()
+                ustathService.getAll(),
+                weeklyTestService.getWeeklyTests()
             ]);
 
             setStudents(studentsData);
@@ -54,6 +59,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             setHifzProgress(progressData);
             setPunishments(punishmentsData);
             setUstaths(ustathsData);
+            setWeeklyTests(weeklyTestsData);
         } catch (err) {
             console.error('Error fetching data:', err);
             setError(err instanceof Error ? err.message : 'Failed to fetch data');
@@ -72,6 +78,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         hifzProgress,
         punishments,
         ustaths,
+        weeklyTests,
         loading,
         error,
         refreshData: fetchAllData,

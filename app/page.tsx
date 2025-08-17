@@ -129,52 +129,6 @@ export default function Home() {
                 </Card>
             </div>
 
-            {/* Additional Content Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="border-0 shadow-sm">
-                    <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-                        <CardTitle className="text-lg sm:text-xl">Recent Activity</CardTitle>
-                        <CardDescription className="text-sm sm:text-base">Latest updates from your class</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 sm:p-6 pt-0">
-                        <div className="space-y-3">
-                            {[1, 2, 3].map((item) => (
-                                <div key={item} className="flex items-start space-x-3 p-3 hover:bg-muted/50 rounded-md transition-colors">
-                                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <span className="text-xs sm:text-sm font-medium">S{item}</span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm sm:text-base font-medium truncate">Student {item} completed their assignment</p>
-                                        <p className="text-xs text-muted-foreground mt-0.5">2h ago</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-0 shadow-sm">
-                    <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-                        <CardTitle className="text-lg sm:text-xl">Upcoming Schedule</CardTitle>
-                        <CardDescription className="text-sm sm:text-base">Your upcoming classes</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 sm:p-6 pt-0">
-                        <div className="space-y-3">
-                            {[1, 2].map((item) => (
-                                <div key={item} className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-md transition-colors">
-                                    <div className="min-w-0">
-                                        <p className="text-sm sm:text-base font-medium truncate">Quran Class - Level {item}</p>
-                                        <p className="text-xs text-muted-foreground mt-0.5">Today, {item === 1 ? '2:00 PM' : '4:00 PM'}</p>
-                                    </div>
-                                    <button className="text-xs sm:text-sm text-primary hover:underline whitespace-nowrap ml-2">
-                                        Details
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
         </div>
     );
 }

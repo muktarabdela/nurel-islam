@@ -10,13 +10,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { LogoutButton } from './auth/LogoutButton';
 
 const sidebarItems = [
-    { name: 'Dashboard', href: '/', icon: <Menu className="h-4 w-4" /> },
-    { name: 'Students', href: '/students', icon: <Users className="h-4 w-4" /> },
-    { name: 'Attendance', href: '/attendance', icon: <CalendarCheck className="h-4 w-4" /> },
-    { name: 'Ḥifẓ Progress', href: '/progress', icon: <BookOpen className="h-4 w-4" /> },
-    { name: 'Weekly Tests', href: '/tests', icon: <ClipboardList className="h-4 w-4" /> },
-    { name: 'Punishments', href: '/punishments', icon: <AlertTriangle className="h-4 w-4" /> },
-    { name: 'Rules', href: '/rules', icon: <ListChecks className="h-4 w-4" /> },
+    { name: 'ዋና ማውጫ', href: '/', icon: <Menu className="h-4 w-4" /> },
+    { name: 'ተማሪዎች', href: '/students', icon: <Users className="h-4 w-4" /> },
+    { name: '', href: '/attendance', icon: <CalendarCheck className="h-4 w-4" /> },
+    { name: 'የ ሂፍዝ መመዝገቢያ', href: '/progress', icon: <BookOpen className="h-4 w-4" /> },
+    { name: 'ሳምንታዊ ፈተና', href: '/tests', icon: <ClipboardList className="h-4 w-4" /> },
+    { name: 'ቅጣቶች', href: '/punishments', icon: <AlertTriangle className="h-4 w-4" /> },
+    { name: 'ህጎች', href: '/rules', icon: <ListChecks className="h-4 w-4" /> },
 ];
 
 export function Sidebar() {
@@ -34,10 +34,14 @@ export function Sidebar() {
 
     // Mobile sidebar trigger
     const mobileTrigger = (
-        <SheetTrigger asChild className="lg:hidden">
-            <Button variant="outline" size="icon" className="shrink-0 ml-4 mt-4">
+        <SheetTrigger asChild className="lg:hidden fixed top-4 left-4 z-40">
+            <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0 h-10 w-10 rounded-full shadow-md"
+                aria-label="Toggle navigation menu"
+            >
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
             </Button>
         </SheetTrigger>
     );
@@ -46,14 +50,12 @@ export function Sidebar() {
     const sidebarContent = (
         <div className="space-y-4 py-4">
             <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-                    Qur'an Ḥifẓ — Ustaz
-                </h2>
+
                 <div className="space-y-1">
                     {sidebarItems.map((item) => (
                         <Button
                             key={item.href}
-                            variant={pathname === item.href ? 'secondary' : 'ghost'}
+                            variant={pathname === item.href ? 'default' : 'ghost'}
                             className="w-full justify-start"
                             asChild
                             onClick={handleNavClick}

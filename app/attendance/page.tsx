@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
-import { EthDateTime, limits } from 'ethiopian-calendar-date-converter'
+import { EthDateTime } from 'ethiopian-calendar-date-converter';
 import { useData } from '@/context/dataContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,13 +12,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 
 // Icons
-import { CheckCircle, Loader2, RefreshCw, Trash2, Users, XCircle } from 'lucide-react';
+import { CheckCircle, Loader2, RefreshCw, Trash2, Users, XCircle, Clock } from 'lucide-react';
 
 // Models
 import { AttendanceStatus, StudentModel } from '@/models/Student';
 import { attendanceService } from '@/lib/servies/attendace';
-import { LoadingScreen } from '@/components/shared/loading';
 
+// Components
+import { DetailedAttendance } from '@/components/features/attendance/DetailedAttendance';
 
 export default function AttendancePage() {
     const { students, attendance, loading, refreshData } = useData();
@@ -52,17 +53,14 @@ export default function AttendancePage() {
 
     // --- Data Preparation ---
     const todaysAttendance = useMemo(() => {
-
         const attendanceMap = new Map(
             attendance.filter(a => a.date === todayGregorianForDB).map(record => [record.student_id, record])
         );
         return students.map(student => {
             const existingRecord = attendanceMap.get(student.id);
-
             if (existingRecord) {
                 return existingRecord;
             }
-
             return {
                 id: '',
                 student_id: student.id,
@@ -80,11 +78,11 @@ export default function AttendancePage() {
     const getStatusBadge = (status: AttendanceStatus) => {
         switch (status) {
             case 'Present':
-                return <Badge variant="default" className="bg-green-500">Present</Badge>;
+                return <Badge variant="default" className="bg-green-500 capitalize">{status}</Badge>;
             case 'Absent':
-                return <Badge variant="destructive">Absent</Badge>;
+                return <Badge variant="destructive" className="capitalize">{status}</Badge>;
             default:
-                return <Badge variant="secondary">Not Marked</Badge>;
+                return <Badge variant="secondary" className="capitalize">{status.replace('_', ' ')}</Badge>;
         }
     };
 
@@ -94,8 +92,7 @@ export default function AttendancePage() {
             const now = new Date();
             const arrivalTime = format(now, 'HH:mm:ss');
             const lateness = calculateLateness(format(now, 'HH:mm'));
-
-            const attendance = await attendanceService.markAttendance({
+            await attendanceService.markAttendance({
                 student_id: studentId,
                 date: todayGregorianForDB,
                 status: 'Present',
@@ -104,8 +101,6 @@ export default function AttendancePage() {
                 excuse: null,
                 punishment_id: null,
             });
-
-            console.log("Attendance marked:", attendance);
             await refreshData();
         } catch (error) {
             console.error("Failed to mark present:", error);
@@ -117,12 +112,11 @@ export default function AttendancePage() {
     const handleOpenAbsenceModal = (student: StudentModel) => {
         setSelectedStudent(student);
         setIsAbsenceModalOpen(true);
-        setAbsenceExcuse(''); // Reset excuse field
+        setAbsenceExcuse('');
     };
 
     const handleMarkAbsent = async () => {
         if (!selectedStudent) return;
-
         setIsSubmitting(true);
         try {
             await attendanceService.markAttendance({
@@ -134,7 +128,6 @@ export default function AttendancePage() {
                 excuse: absenceExcuse || null,
                 punishment_id: null,
             });
-
             await refreshData();
             setIsAbsenceModalOpen(false);
         } catch (error) {
@@ -143,6 +136,7 @@ export default function AttendancePage() {
             setIsSubmitting(false);
         }
     };
+
     const handleDeleteAttendance = async (id: string) => {
         setIsSubmitting(true);
         try {
@@ -159,25 +153,63 @@ export default function AttendancePage() {
     const absentCount = todaysAttendance.filter(a => a.status === 'Absent').length;
     const totalStudents = students.length;
 
-    // if (loading) {
-    //     return <LoadingScreen />;
-    // }
+    const renderActions = (record: any, student: StudentModel) => {
+        if (record.status === 'Not Marked') {
+            return (
+                <div className="flex justify-end gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMarkPresent(student.id)}
+                        disabled={isSubmitting}
+                        className="hover:bg-green-500 hover:text-white"
+                    >
+                        <CheckCircle className="mr-2 h-4 w-4" /> Present
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenAbsenceModal(student)}
+                        disabled={isSubmitting}
+                        className="hover:bg-red-500 hover:text-white"
+                    >
+                        <XCircle className="mr-2 h-4 w-4" /> Absent
+                    </Button>
+                </div>
+            );
+        }
+        return (
+            <div className="flex justify-end">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteAttendance(record.id)}
+                    disabled={isSubmitting}
+                    className="text-muted-foreground hover:text-destructive"
+                >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Delete</span>
+                </Button>
+            </div>
+        );
+    };
+
 
     return (
-        <div className="container mx-auto py-6 space-y-6">
-            <header>
-                <h1 className="text-3xl font-bold tracking-tight">Attendance Management</h1>
-                <p className="text-muted-foreground">
+        <div className="container mx-auto py-8 px-4 md:px-6">
+            <header className="mb-8">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">Attendance Management</h1>
+                <p className="text-muted-foreground mt-1">
                     Manage and track student attendance for {todayEthiopianForDisplay}
                 </p>
             </header>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3 mb-8">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <Users className="h-5 w-5 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{totalStudents}</div>
@@ -186,7 +218,7 @@ export default function AttendancePage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium">Present Today</CardTitle>
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <CheckCircle className="h-5 w-5 text-green-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{presentCount}</div>
@@ -195,7 +227,7 @@ export default function AttendancePage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium">Absent Today</CardTitle>
-                        <XCircle className="h-4 w-4 text-red-500" />
+                        <XCircle className="h-5 w-5 text-red-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{absentCount}</div>
@@ -203,84 +235,94 @@ export default function AttendancePage() {
                 </Card>
             </div>
 
-            {/* Attendance Table Card */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
+            {/* Attendance List */}
+            <Card className="shadow-md">
+                <CardHeader className="border-b">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <CardTitle>Today's Attendance</CardTitle>
-                            <CardDescription>
+                            <CardDescription className="mt-1">
                                 Lateness is calculated based on a start time of {CLASS_START_TIME}.
                             </CardDescription>
                         </div>
-                        <Button variant="outline" onClick={refreshData} disabled={loading}>
+                        <Button variant="outline" onClick={refreshData} disabled={loading} className="w-full sm:w-auto">
                             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
                             Refresh
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0">
                     {loading ? (
-                        <div className="flex items-center justify-center h-40"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+                        <div className="flex items-center justify-center h-60"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
                     ) : (
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Student Name</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Lateness (minutes)</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {todaysAttendance.map(record => {
-                                        const student = students.find(s => s.id === record.student_id);
-                                        if (!student) return null; // Should not happen
+                        <>
+                            {/* Desktop Table View */}
+                            <div className="hidden md:block">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[250px]">Student Name</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Lateness (minutes)</TableHead>
+                                            <TableHead className="text-right pr-6">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {todaysAttendance.map(record => {
+                                            const student = students.find(s => s.id === record.student_id);
+                                            if (!student) return null;
+                                            return (
+                                                <TableRow key={record.student_id}>
+                                                    <TableCell className="font-medium">{student.full_name}</TableCell>
+                                                    <TableCell>{getStatusBadge(record.status)}</TableCell>
+                                                    <TableCell>
+                                                        {record.lateness_in_minutes != null ? `${record.lateness_in_minutes} min` : <span className="text-muted-foreground">N/A</span>}
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-6">
+                                                        {renderActions(record, student)}
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </div>
 
-                                        return (
-                                            <TableRow key={record.student_id}>
-                                                <TableCell className="font-medium">{student.full_name}</TableCell>
-                                                <TableCell>{getStatusBadge(record.status)}</TableCell>
-                                                <TableCell>
-                                                    {record.lateness_in_minutes != null ? `${record.lateness_in_minutes} min` : 'N/A'}
-                                                </TableCell>
-                                                <TableCell className="text-right space-x-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleMarkPresent(student.id)}
-                                                        disabled={isSubmitting || record.status === 'Present'}
-                                                    >
-                                                        <CheckCircle className="mr-2 h-4 w-4" /> Present
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleOpenAbsenceModal(student)}
-                                                        disabled={isSubmitting || record.status === 'Absent'}
-                                                    >
-                                                        <XCircle className="mr-2 h-4 w-4" /> Absent
-                                                    </Button>
-                                                    {record.status !== 'Not Marked' && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleDeleteAttendance(record.id)}
-                                                        >
-                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                        </Button>
-                                                    )}
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
+                            {/* Mobile Card View */}
+                            <div className="grid gap-4 p-4 md:hidden">
+                                {todaysAttendance.map(record => {
+                                    const student = students.find(s => s.id === record.student_id);
+                                    if (!student) return null;
+                                    return (
+                                        <Card key={record.student_id} className="shadow-sm">
+                                            <CardHeader>
+                                                <div className="flex items-center justify-between">
+                                                    <CardTitle className="text-base">{student.full_name}</CardTitle>
+                                                    {getStatusBadge(record.status)}
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent>
+                                                {record.status === 'Present' && (
+                                                    <div className="flex items-center text-sm text-muted-foreground mb-4">
+                                                        <Clock className="h-4 w-4 mr-2" />
+                                                        <span>Lateness: {record.lateness_in_minutes} min</span>
+                                                    </div>
+                                                )}
+                                                {renderActions(record, student)}
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        </>
                     )}
                 </CardContent>
             </Card>
+
+            {/* Detailed Attendance Section */}
+            <div className="mt-8">
+                <DetailedAttendance students={students} attendance={attendance} />
+            </div>
 
             {/* Absence Reason Dialog */}
             <Dialog open={isAbsenceModalOpen} onOpenChange={setIsAbsenceModalOpen}>
@@ -288,20 +330,21 @@ export default function AttendancePage() {
                     <DialogHeader>
                         <DialogTitle>Mark {selectedStudent?.full_name} as Absent</DialogTitle>
                         <DialogDescription>
-                            You can provide an optional reason for the student's absence.
+                            Provide an optional reason for the student's absence. This can be helpful for tracking patterns.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                         <Textarea
-                            placeholder="Enter reason for absence..."
+                            placeholder="e.g., Family emergency, sick leave..."
                             value={absenceExcuse}
                             onChange={(e) => setAbsenceExcuse(e.target.value)}
+                            className="resize-none"
                         />
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsAbsenceModalOpen(false)}>Cancel</Button>
                         <Button variant="destructive" onClick={handleMarkAbsent} disabled={isSubmitting}>
-                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Confirm Absent
                         </Button>
                     </DialogFooter>
