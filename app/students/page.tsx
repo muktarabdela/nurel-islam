@@ -129,15 +129,15 @@ export default function StudentsPage() {
         <div className="space-y-6">
             <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
                 <div>
-                    <h1 className="text-3xl font-bold">Students</h1>
-                    <p className="text-muted-foreground">Manage hifz students</p>
+                    <h1 className="text-3xl font-bold">ተማሪዎች</h1>
+                    <p className="text-muted-foreground">የተማሪዎች አስተዳደር</p>
                 </div>
                 <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                     <div className="relative">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             type="search"
-                            placeholder="Search students..."
+                            placeholder="ተማሪዎችን ፈልግ..."
                             className="pl-8 w-full sm:w-[300px]"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -145,7 +145,7 @@ export default function StudentsPage() {
                     </div>
                     <Button onClick={handleAddStudent}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Add Student
+                        ተማሪ ይመዝገቡ
                     </Button>
                 </div>
             </div>
@@ -156,10 +156,10 @@ export default function StudentsPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="whitespace-nowrap">Student</TableHead>
-                                <TableHead className="whitespace-nowrap">Family Name</TableHead>
-                                <TableHead className="whitespace-nowrap">Family Phone</TableHead>
-                                <TableHead className="whitespace-nowrap">Current Page</TableHead>
+                                <TableHead className="whitespace-nowrap">ተማሪ ስም</TableHead>
+                                <TableHead className="whitespace-nowrap">የቤተሰብ ስም</TableHead>
+                                <TableHead className="whitespace-nowrap">የቤተሰብ ስልክ</TableHead>
+                                {/* <TableHead className="whitespace-nowrap">Current Page</TableHead> */}
                                 <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -182,9 +182,9 @@ export default function StudentsPage() {
                                         <TableCell>
                                             {student.family_phone || 'N/A'}
                                         </TableCell>
-                                        <TableCell>
+                                        {/* <TableCell>
                                             {student.current_hifz_page}
-                                        </TableCell>
+                                        </TableCell> */}
                                         <TableCell className="text-right">
                                             {renderActions(student)}
                                         </TableCell>
@@ -220,10 +220,10 @@ export default function StudentsPage() {
                                     <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
                                     <span>{student.family_phone || 'No family phone'}</span>
                                 </div>
-                                <div className="flex items-center">
+                                {/* <div className="flex items-center">
                                     <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
                                     <span>Current Page: {student.current_hifz_page}</span>
-                                </div>
+                                </div> */}
                             </CardContent>
                         </Card>
                     ))

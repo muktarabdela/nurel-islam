@@ -252,6 +252,8 @@ function EditTestModal({ test, onClose, onTestUpdated }: {
             // First update the test
             await weeklyTestService.updateWeeklyTest(test.id, {
                 ustazh_id: test.ustazh_id,
+                // type ignore
+                // @ts-ignore
                 date: testData.date,
                 notes: testData.notes,
                 total_value: testData.total_value
@@ -479,7 +481,7 @@ function StudentResultRow({ student, test, onResultsUpdated }: { student: Studen
                 student_id: student.id,
                 total_score: totalScore,
             };
-
+            // @ts-ignore
             const evaluationScores: AddStudentTestResultParams['evaluationScores'] = test.test_evaluations.map(ev => ({
                 test_evaluation_id: ev.id,
                 score: scores[ev.id] || 0,
