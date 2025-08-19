@@ -1,229 +1,176 @@
-"use client";
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+"use client"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, Square } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { useData } from "@/context/dataContext";
-import { HifzProgress } from "@/models/HifzProgress";
-import { LoadingScreen } from "@/components/shared/loading";
-import { hifzProgressService } from "@/lib/servies/hifz-progress";
+import { useEffect, useState, useMemo } from "react";
+import { HifzWeeklyProgress } from "@/models/HifzProgress";
+import { Loader2, Users, Award, AlertTriangle, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { StudentProgressCard } from "@/components/features/students/StudentProgressCard";
 
-// Get today's date in YYYY-MM-DD format
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-const todayStr = today.toISOString().split('T')[0];
+// Helper to get the start and end dates of the week for a given date
+export const getWeekRange = (date = new Date()) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    const start = new Date(d.setDate(diff));
 
-// Get week range for the weekly report
-const getWeekRange = () => {
-    const firstDay = new Date(today);
-    const lastDay = new Date(today);
-    firstDay.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
-    lastDay.setDate(firstDay.getDate() + 6); // Sunday
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
 
-    const format = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return `${format(firstDay)} - ${format(lastDay)}`;
+    return {
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0],
+    };
 };
 
-export default function ProgressPage() {
-    const {
-        students,
-        hifzProgress,
-        loading,
-        refreshData
-    } = useData();
+export default function HifzWeeklyProgressPage() {
+    const { students, hifzProgress, loading, error, refreshData } = useData();
 
-    console.log("hifzProgress", hifzProgress);
+    // State for filtering
+    const [selectedStudentId, setSelectedStudentId] = useState<string>('all');
+    const [currentDate, setCurrentDate] = useState(new Date());
 
-    const [weeklyBaseline, setWeeklyBaseline] = useState<Record<string, number>>({});
-    const [weeklyProgress, setWeeklyProgress] = useState<Record<string, HifzProgress[]>>({});
+    const [stats, setStats] = useState({
+        totalTracked: 0,
+        achieved: 0,
+        notAchieved: 0,
+        pending: 0,
+    });
 
-    // Get today's progress for a student
-    const getTodaysProgress = useCallback((studentId: string): HifzProgress | undefined => {
-        return hifzProgress.find(p => p.student_id === studentId && p.date === todayStr);
-    }, [hifzProgress, todayStr]);
+    // Memoize the currently viewed week's range
+    const currentWeekRange = useMemo(() => getWeekRange(currentDate), [currentDate]);
 
-    // Toggle done status for today
-    const toggleDoneToday = async (studentId: string) => {
-        const todaysProgress = getTodaysProgress(studentId);
-        const student = students.find(s => s.id === studentId);
+    // Filter progress records for the selected week
+    const weeklyProgress = useMemo(() => {
+        return hifzProgress.filter(p => p.start_date === currentWeekRange.startDate);
+    }, [hifzProgress, currentWeekRange]);
 
-        if (!student) return;
-
-        if (todaysProgress) {
-            // If already marked for today, delete the progress
-            await hifzProgressService.deleteProgress(todaysProgress.id);
-        } else {
-            // Mark as completed for today (1 page)
-            await hifzProgressService.recordProgress({
-                student_id: studentId,
-                date: todayStr,
-                pages_completed: 1,
-                notes: null
-            });
-
-            // Set weekly baseline if not set
-            if (!weeklyBaseline[studentId]) {
-                setWeeklyBaseline(prev => ({
-                    ...prev,
-                    [studentId]: student.current_hifz_page
-                }));
-            }
+    // Filter students based on the dropdown selection
+    const filteredStudents = useMemo(() => {
+        if (selectedStudentId === 'all') {
+            return students;
         }
+        return students.filter(s => s.id === selectedStudentId);
+    }, [students, selectedStudentId]);
 
-        await refreshData();
-    };
-
-    // Check if student has completed today
-    const isDoneToday = (studentId: string) => {
-        return !!getTodaysProgress(studentId)?.pages_completed;
-    };
-
-    // Calculate weekly target page (current page + 7 pages for the week)
-    const weeklyTargetPageForStudent = (studentId: string) => {
-        const base = weeklyBaseline[studentId] || students.find(s => s.id === studentId)?.current_hifz_page || 0;
-        return base + 7;
-    };
-
-    // Calculate pages completed this week
-    const weeklyCompletedForStudent = (studentId: string) => {
-        const studentProgress = weeklyProgress[studentId] || [];
-        return studentProgress.reduce((sum, p) => sum + (p.pages_completed || 0), 0);
-    };
-
-    // Load weekly progress for all students
+    // Re-calculate stats when the filtered weekly progress changes
     useEffect(() => {
-        const getStudentHifzProgress = (studentId: string) => {
-            return hifzProgress.filter(p => p.student_id === studentId);
-        };
+        if (weeklyProgress.length > 0) {
+            const achievedCount = weeklyProgress.filter(p => p.achieved === true).length;
+            const notAchievedCount = weeklyProgress.filter(p => p.achieved === false).length;
+            const pendingCount = weeklyProgress.filter(p => p.achieved === null).length;
 
-        const loadWeeklyProgress = async () => {
-            const firstDay = new Date(today);
-            firstDay.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
-            const lastDay = new Date(firstDay);
-            lastDay.setDate(firstDay.getDate() + 6);
-
-            const startDate = firstDay.toISOString().split('T')[0];
-            const endDate = lastDay.toISOString().split('T')[0];
-
-            const progressMap: Record<string, HifzProgress[]> = {};
-
-            for (const student of students) {
-                const progress = getStudentHifzProgress(student.id);
-                progressMap[student.id] = progress.filter(p =>
-                    p.date >= startDate && p.date <= endDate && p.pages_completed > 0
-                );
-            }
-
-            setWeeklyProgress(progressMap);
-        };
-
-        if (students.length > 0) {
-            loadWeeklyProgress();
+            setStats({
+                totalTracked: weeklyProgress.length,
+                achieved: achievedCount,
+                notAchieved: notAchievedCount,
+                pending: pendingCount,
+            });
+        } else {
+            setStats({ totalTracked: 0, achieved: 0, notAchieved: 0, pending: 0 });
         }
-    }, [students, hifzProgress]);
+    }, [weeklyProgress]);
+
+    // Handlers for week navigation
+    const handleWeekChange = (direction: 'prev' | 'next') => {
+        const newDate = new Date(currentDate);
+        const dayOffset = direction === 'prev' ? -7 : 7;
+        newDate.setDate(newDate.getDate() + dayOffset);
+        setCurrentDate(newDate);
+    };
+
+    const goToToday = () => {
+        setCurrentDate(new Date());
+    };
 
     if (loading) {
-        return <LoadingScreen />;
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen text-red-600">
+                <AlertTriangle className="h-12 w-12 mb-4" />
+                <h2 className="text-xl font-semibold">Error loading data</h2>
+                <p>{error}</p>
+            </div>
+        );
     }
 
     return (
-        <div className="container mx-auto p-4">
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Daily Ḥifẓ Progress — {todayStr}</h2>
-                <span className="text-sm text-muted-foreground">Weekly plan: 1 page/day</span>
+        <div className="space-y-6 p-4 sm:p-6">
+            {/* Header and Filters Section */}
+            <div className="space-y-4">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Weekly Hifz Progress</h1>
+
+                {/* Filter Controls */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                    {/* Student Dropdown Filter */}
+                    <div className="w-full sm:max-w-xs">
+                        <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a student" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Students</SelectItem>
+                                {students.map(student => (
+                                    <SelectItem key={student.id} value={student.id}>
+                                        {student.full_name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Week Navigation */}
+                    <div className="flex items-center gap-2 justify-center">
+                        <Button variant="outline" size="icon" onClick={() => handleWeekChange('prev')}>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="text-sm font-medium text-muted-foreground text-center w-48 bg-muted/40 px-3 py-1.5 rounded-md">
+                            {new Date(currentWeekRange.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(currentWeekRange.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </div>
+                        <Button variant="outline" size="icon" onClick={() => handleWeekChange('next')}>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" className="ml-2" onClick={goToToday}>Today</Button>
+                    </div>
+                </div>
             </div>
 
-            <Card className="mb-6">
-                <CardHeader>
-                    <CardTitle>Today's Progress</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Student</TableHead>
-                                    <TableHead>Current Page</TableHead>
-                                    <TableHead>Mark Done (today)</TableHead>
-                                    <TableHead>Done Today?</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {students.map((student) => (
-                                    <TableRow key={`prog-${student.id}`}>
-                                        <TableCell className="font-medium">{student.full_name}</TableCell>
-                                        <TableCell>{student.current_hifz_page}</TableCell>
-                                        <TableCell>
-                                            <Button
-                                                variant={isDoneToday(student.id) ? "default" : "outline"}
-                                                size="sm"
-                                                onClick={() => toggleDoneToday(student.id)}
-                                                className="gap-2"
-                                                disabled={loading}
-                                            >
-                                                {isDoneToday(student.id) ? (
-                                                    <Check className="h-4 w-4" />
-                                                ) : (
-                                                    <Square className="h-4 w-4" />
-                                                )}
-                                                {isDoneToday(student.id) ? 'Completed' : 'Mark Done'}
-                                            </Button>
-                                        </TableCell>
-                                        <TableCell>
-                                            {isDoneToday(student.id) ? (
-                                                <Badge variant="default">Yes</Badge>
-                                            ) : (
-                                                <Badge variant="secondary">No</Badge>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Weekly Report ({getWeekRange()})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Student</TableHead>
-                                    <TableHead>Start Page</TableHead>
-                                    <TableHead>Current Page</TableHead>
-                                    <TableHead>Target Page</TableHead>
-                                    <TableHead>Pages This Week</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {students.map((student) => {
-                                    const startPage = weeklyBaseline[student.id] || student.current_hifz_page;
-                                    const progress = weeklyProgress[student.id] || [];
-                                    const pagesThisWeek = progress.reduce((sum, p) => sum + (p.pages_completed || 0), 0);
 
-                                    return (
-                                        <TableRow key={`wr-${student.id}`}>
-                                            <TableCell className="font-medium">{student.full_name}</TableCell>
-                                            <TableCell>{startPage}</TableCell>
-                                            <TableCell>{student.current_hifz_page}</TableCell>
-                                            <TableCell>{startPage + 7}</TableCell>
-                                            <TableCell>{pagesThisWeek}</TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
+            {/* Student Progress List - reflects filters */}
+            <div className="space-y-4">
+                <h2 className="text-2xl font-bold tracking-tight">Student Records</h2>
+                {filteredStudents.length > 0 ? filteredStudents.map((student) => {
+                    const progress = weeklyProgress.find(p => p.student_id === student.id);
+                    return (
+                        <StudentProgressCard
+                            key={student.id}
+                            student={student}
+                            weeklyProgress={progress}
+                            weekRange={currentWeekRange}
+                            onUpdate={refreshData}
+                        />
+                    );
+                }) : (
+                    <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                        <p className="mt-1 text-sm text-gray-500">No student selected.</p>
                     </div>
-                </CardContent>
-            </Card>
+                )}
+            </div>
         </div>
     );
 }

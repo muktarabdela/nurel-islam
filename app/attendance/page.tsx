@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 // Icons
 import { CheckCircle, Loader2, RefreshCw, Trash2, Users, XCircle, Clock } from 'lucide-react';
@@ -268,7 +269,7 @@ export default function AttendancePage() {
                         <div className="flex items-center justify-center h-60"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
                     ) : (
                         <>
-                            <div className="overflow-x-auto">
+                            <ScrollArea className="h-[400px] w-full">
                                 <Table className="min-w-full"> {/* Use min-w-full to ensure it takes at least the full width */}
                                     <TableHeader>
                                         <TableRow>
@@ -314,7 +315,9 @@ export default function AttendancePage() {
                                         })}
                                     </TableBody>
                                 </Table>
-                            </div>
+                                <ScrollBar orientation="horizontal" />
+
+                            </ScrollArea>
 
                         </>
                     )}
@@ -355,3 +358,4 @@ export default function AttendancePage() {
         </div>
     );
 }
+
