@@ -15,7 +15,7 @@ import { Loader2, Users, Award, AlertTriangle, Clock, ChevronLeft, ChevronRight 
 import { StudentProgressCard } from "@/components/features/students/StudentProgressCard";
 
 // Helper to get the start and end dates of the week for a given date
-export const getWeekRange = (date = new Date()) => {
+const getWeekRange = (date = new Date()) => {
     const d = new Date(date);
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
