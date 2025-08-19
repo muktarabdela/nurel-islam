@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { LogoutButton } from './auth/LogoutButton';
 
 const sidebarItems = [
-    { name: 'ዋና ማውጫ', href: '/', icon: <Menu className="h-4 w-4" /> },
+    // { name: 'ዋና ማውጫ', href: '/', icon: <Menu className="h-4 w-4" /> },
     { name: 'ተማሪዎች', href: '/students', icon: <Users className="h-4 w-4" /> },
     { name: 'የተማሪዎች መቆጣጠሪያ', href: '/attendance', icon: <CalendarCheck className="h-4 w-4" /> },
     { name: 'የ ሂፍዝ መመዝገቢያ', href: '/progress', icon: <BookOpen className="h-4 w-4" /> },
@@ -50,6 +50,26 @@ export function Sidebar() {
     const sidebarContent = (
         <div className="space-y-4 py-4">
             <div className="px-3 py-2">
+
+                {/* logo */}
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center space-x-1 text-3xl font-bold text-primary">
+                        <span className="text-primary-500">ኑ</span>
+                        <span className="text-primary-600">ር</span>
+                        <span className="text-primary-700">ል</span>
+                        <span className="text-primary-700"></span>
+
+                        <span className="text-primary-800">ኢ</span>
+                        <span className="text-primary-700">ስ</span>
+                        <span className="text-primary-900">ላ</span>
+                        <span className="text-primary">ም</span>
+                        {/* <span className="text-primary-200">i</span>
+                        <span className="text-primary-300">s</span>
+                        <span className="text-primary-400">l</span>
+                        <span className="text-primary-50">a</span>
+                        <span className="text-primary-100">m</span> */}
+                    </div>
+                </div>
 
                 <div className="space-y-1">
                     {sidebarItems.map((item) => (

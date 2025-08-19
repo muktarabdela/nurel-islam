@@ -269,14 +269,14 @@ export default function AttendancePage() {
                         <div className="flex items-center justify-center h-60"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
                     ) : (
                         <>
-                            <ScrollArea className="h-[400px] w-full">
-                                <Table className="min-w-full"> {/* Use min-w-full to ensure it takes at least the full width */}
+                            <div className="overflow-x-auto">
+                                <Table className="hidden sm:table">
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="w-[250px] whitespace-nowrap">የተማሪ ስም</TableHead>
-                                            <TableHead className="whitespace-nowrap">ሁኔታ</TableHead>
-                                            <TableHead className="whitespace-nowrap">ያረፈደው (ደቂቃ)</TableHead>
-                                            <TableHead className="text-right pr-6 whitespace-nowrap">ተግባሮች</TableHead>
+                                            <TableHead>የተማሪ ስም</TableHead>
+                                            <TableHead>ሁኔታ</TableHead>
+                                            <TableHead>ያረፈደው (ደቂቃ)</TableHead>
+                                            <TableHead className="text-right">ተግባሮች</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -285,14 +285,7 @@ export default function AttendancePage() {
                                             if (!student) return null;
                                             return (
                                                 <TableRow key={record.student_id}>
-                                                    <TableCell className="font-medium whitespace-nowrap">{student.full_name}</TableCell>
-                                                    <TableCell className="whitespace-nowrap">
-                                                        {record.status === 'Present'
-                                                            ? getStatusBadge('ተገኝቷል')
-                                                            : record.status === 'Absent'
-                                                                ? getStatusBadge('አልመጣም')
-                                                                : getStatusBadge(record.status)}
-                                                    </TableCell>
+                                                    <TableCell>{student.full_name}</TableCell>
                                                     <TableCell className="whitespace-nowrap">
                                                         {record.lateness_in_minutes != null ? (
                                                             record.lateness_in_minutes > 0 ? (
@@ -307,17 +300,55 @@ export default function AttendancePage() {
                                                         )}
                                                     </TableCell>
 
-                                                    <TableCell className="text-right pr-6">
-                                                        {renderActions(record, student)}
-                                                    </TableCell>
+                                                    <TableCell className="text-right">{renderActions(record, student)}</TableCell>
                                                 </TableRow>
                                             );
                                         })}
                                     </TableBody>
                                 </Table>
-                                <ScrollBar orientation="horizontal" />
 
-                            </ScrollArea>
+                                {/* Mobile stacked version */}
+                                <div className="sm:hidden space-y-3">
+                                    {todaysAttendance.map(record => {
+                                        const student = students.find(s => s.id === record.student_id);
+                                        if (!student) return null;
+                                        return (
+                                            <div
+                                                key={record.student_id}
+                                                className="border rounded-lg p-3 shadow-sm bg-white"
+                                            >
+                                                <div className="flex justify-between">
+                                                    <span className="font-semibold">የተማሪ ስም</span>
+                                                    <span>{student.full_name}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-semibold">ሁኔታ</span>
+                                                    <span>{record.status}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-semibold">ያረፈደው</span>
+                                                    <span>
+                                                        {record.lateness_in_minutes != null ? (
+                                                            record.lateness_in_minutes > 0 ? (
+                                                                `${record.lateness_in_minutes} ደቂቃ አርፍዷል`
+                                                            ) : record.lateness_in_minutes < 0 ? (
+                                                                `${Math.abs(record.lateness_in_minutes)} ደቂቃ ቀድሟል`
+                                                            ) : (
+                                                                "On time"
+                                                            )
+                                                        ) : (
+                                                            <span className="text-muted-foreground">N/A</span>
+                                                        )}
+
+                                                    </span>
+                                                </div>
+                                                <div className="mt-2 flex justify-end">{renderActions(record, student)}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
 
                         </>
                     )}

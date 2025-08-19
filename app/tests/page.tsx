@@ -116,13 +116,13 @@ export default function TestsPage() {
             ) : (
                 <>
                     <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-3xl font-bold text-foreground">Weekly Tests</h1>
+                        <h1 className="text-2xl font-bold text-foreground">ሳምንታዊ ፈተና</h1>
                         <button
                             onClick={() => setCreateModalOpen(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow-md hover:bg-primary/90 transition-colors"
                         >
                             <PlusIcon />
-                            Create New Test
+                            አዲስ ይመዝግቡ
                         </button>
                     </div>
                     <TestListView tests={weeklyTests} onSelectTest={setSelectedTestId} onEditTest={handleEditTest} onDeleteTest={handleDeleteTest} />
@@ -166,8 +166,8 @@ function TestListView({ tests, onSelectTest, onEditTest, onDeleteTest }: {
     if (!tests || tests.length === 0) {
         return (
             <div className="text-center py-16 px-6 bg-card border border-border rounded-lg shadow-sm">
-                <h3 className="text-xl font-semibold text-card-foreground">No tests found</h3>
-                <p className="mt-2 text-muted-foreground">Click "Create New Test" to get started.</p>
+                <h3 className="text-xl font-semibold text-card-foreground">የተመዘገበ ፈተና የለም</h3>
+                <p className="mt-2 text-muted-foreground">"አዲስ ፈተና ይመዝግቡ።</p>
             </div>
         );
     }
@@ -179,28 +179,28 @@ function TestListView({ tests, onSelectTest, onEditTest, onDeleteTest }: {
                     <div>
                         <p className="text-sm text-muted-foreground">{new Date(test.date).toLocaleDateString()}</p>
                         <h2 className="text-lg font-semibold text-card-foreground mt-1 truncate">{test.notes || 'General Test'}</h2>
-                        <p className="mt-2 text-sm text-muted-foreground">Total Value: <span className="font-medium text-primary">{test.total_value}</span></p>
+                        <p className="mt-2 text-sm text-muted-foreground">ጠቅላላ ውቲጥ: <span className="font-medium text-primary">{test.total_value}</span></p>
                     </div>
                     <div className="mt-4 space-y-2">
                         <button
                             onClick={() => onSelectTest(test.id)}
                             className="w-full py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-accent transition-colors"
                         >
-                            View Details
+                            ዘርዝር ይመልከቱ
                         </button>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => onEditTest(test)}
                                 className="flex-1 py-2 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-accent transition-colors"
                             >
-                                Edit
+                                ፈተናውን ያስተካክሉ
                             </button>
                             <button
                                 onClick={() => handleDelete(test.id)}
                                 disabled={deletingId === test.id}
                                 className="flex-1 py-2 text-sm bg-destructive/10 text-destructive rounded-md hover:bg-destructive/20 transition-colors disabled:opacity-50"
                             >
-                                {deletingId === test.id ? 'Deleting...' : 'Delete'}
+                                {deletingId === test.id ? 'Deleting...' : 'ያጥፉ'}
                             </button>
                         </div>
                     </div>
