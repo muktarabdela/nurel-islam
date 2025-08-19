@@ -502,16 +502,16 @@ function StudentResultRow({ student, test, onResultsUpdated }: { student: Studen
 
     return (
         <tr className="hover:bg-accent/50 transition-colors">
-            <td className="px-6 py-4 font-medium text-foreground">{student.full_name}</td>
+            <td className="px-3 sm:px-6 py-4 font-medium text-foreground">{student.full_name}</td>
             {test.test_evaluations.map(ev => (
-                <td key={ev.id} className="px-6 py-4 text-center">
+                <td key={ev.id} className="px-3 sm:px-6 py-4 text-center">
                     {isEditing ? (
                         <input
                             type="number"
                             value={scores[ev.id] || ''}
                             onChange={(e) => handleScoreChange(e.target.id, e.target.value, ev.max_value)}
                             id={ev.id}
-                            className="w-16 p-1 text-center bg-input border border-border rounded-md text-foreground focus:ring-2 focus:ring-ring"
+                            className="w-14 sm:w-16 p-1 text-center bg-input border border-border rounded-md text-foreground focus:ring-2 focus:ring-ring"
                             max={ev.max_value}
                             min="0"
                         />
@@ -520,8 +520,8 @@ function StudentResultRow({ student, test, onResultsUpdated }: { student: Studen
                     )}
                 </td>
             ))}
-            <td className="px-6 py-4 font-semibold text-center text-primary">{totalScore} / {test.total_value}</td>
-            <td className="px-6 py-4 text-center">
+            <td className="px-3 sm:px-6 py-4 font-semibold text-center text-primary">{totalScore} / {test.total_value}</td>
+            <td className="px-3 sm:px-6 py-4 text-center">
                 {isEditing ? (
                     <div className="flex items-center justify-center gap-2">
                         <button

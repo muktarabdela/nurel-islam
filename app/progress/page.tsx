@@ -109,7 +109,7 @@ export default function HifzWeeklyProgressPage() {
     }
 
     return (
-        <div className="space-y-6 p-4 sm:p-6">
+        <div className="container mx-auto py-4 sm:py-8 px-3 sm:px-4 md:px-6">
             {/* Header and Filters Section */}
             <div className="space-y-4">
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Weekly Hifz Progress</h1>
