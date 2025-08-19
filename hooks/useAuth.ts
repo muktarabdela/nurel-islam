@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 type User = {
     id: string;
     username: string;
+    full_name: string;
     // Add other user properties as needed
 } | null;
 

@@ -92,13 +92,13 @@ export const ustathService = {
     },
 
     // Add a method to verify admin credentials
-    async verifyAdmin(email: string, password: string): Promise<UstathModel | null> {
+    async verifyAdmin(id: string, password: string): Promise<UstathModel | null> {
         try {
             // First, find the admin by email (you'll need to add email to your AdminModel and table)
             const { data: admin, error } = await supabase
                 .from(TABLE_NAME)
                 .select('*')
-                .eq('email', email)
+                .eq('id', id)
                 .single();
 
             if (error || !admin) {
