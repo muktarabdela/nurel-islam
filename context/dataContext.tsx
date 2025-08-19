@@ -5,7 +5,7 @@ import { studentService } from '@/lib/servies/student';
 import { StudentModel } from '@/models/Student';
 import { Attendance } from '@/models/Attendance';
 import { attendanceService } from '@/lib/servies/attendace';
-import { HifzProgress } from '@/models/HifzProgress';
+import { HifzWeeklyProgress } from '@/models/HifzProgress';
 import { hifzProgressService } from '@/lib/servies/hifz-progress';
 import { PunishmentModel } from '@/models/Punishment';
 import { punishmentService } from '@/lib/servies/punishment';
@@ -17,7 +17,7 @@ import { weeklyTestService } from '@/lib/servies/test';
 type DataContextType = {
     students: StudentModel[];
     attendance: Attendance[];
-    hifzProgress: HifzProgress[];
+    hifzProgress: HifzWeeklyProgress[];
     punishments: PunishmentModel[];
     ustaths: UstathModel[];
     weeklyTests: WeeklyTest[];
@@ -32,7 +32,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export function DataProvider({ children }: { children: ReactNode }) {
     const [students, setStudents] = useState<StudentModel[]>([]);
     const [attendance, setAttendance] = useState<Attendance[]>([]);
-    const [hifzProgress, setHifzProgress] = useState<HifzProgress[]>([]);
+    const [hifzProgress, setHifzProgress] = useState<HifzWeeklyProgress[]>([]);
     const [punishments, setPunishments] = useState<PunishmentModel[]>([]);
     const [ustaths, setUstaths] = useState<UstathModel[]>([]);
     const [weeklyTests, setWeeklyTests] = useState<WeeklyTest[]>([]);
