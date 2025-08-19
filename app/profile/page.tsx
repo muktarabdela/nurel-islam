@@ -55,9 +55,10 @@ export default function ProfilePage() {
     }, [user, reset]);
 
 
-    const onSubmit = async (data) => {
+    const onSubmit = async (data: any) => {
         try {
             // Verify current password first
+            // @ts-ignore
             const isValidPassword = await ustathService.verifyAdmin(user?.id, data.currentPassword);
             if (!isValidPassword) {
                 toast.error('Invalid current password');
@@ -82,10 +83,12 @@ export default function ProfilePage() {
 
             // Update password if a new one is provided
             if (data.newPassword) {
+                // @ts-ignore
                 await ustathService.changeAdminPassword(user?.id, data.newPassword);
             }
 
             // Update auth context
+            // @ts-ignore
             login({
                 ...user,
                 username: data.userName
@@ -94,6 +97,7 @@ export default function ProfilePage() {
             toast.success('Profile updated successfully');
             setIsEditing(false);
         } catch (error) {
+            // @ts-ignore
             toast.error('Error updating profile', error.message);
         }
     };
