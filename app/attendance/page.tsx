@@ -40,15 +40,23 @@ export default function AttendancePage() {
     const todayEthiopianForDisplay = `${ethiopianMonths[todayEthiopian.month - 1]} ${todayEthiopian.date}, ${todayEthiopian.year}`;
     const todayGregorianForDB = format(todayGregorian, 'yyyy-MM-dd');
 
-    const CLASS_START_TIME = '08:30';
 
+    const CLASS_START_TIME = "08:30"; // 24h safe for calculation
+
+    // arrivalTime should be in "HH:mm" (24h) format
     const calculateLateness = (arrivalTime: string): number => {
-        const [arrivalHours, arrivalMinutes] = arrivalTime.split(':').map(Number);
-        const [classHours, classMinutes] = CLASS_START_TIME.split(':').map(Number);
+        const [arrivalHours, arrivalMinutes] = arrivalTime.split(":").map(Number);
+        const [classHours, classMinutes] = CLASS_START_TIME.split(":").map(Number);
+
         const arrivalTotalMinutes = arrivalHours * 60 + arrivalMinutes;
         const classTotalMinutes = classHours * 60 + classMinutes;
-        return Math.max(0, arrivalTotalMinutes - classTotalMinutes);
+
+        const lateness = arrivalTotalMinutes - classTotalMinutes;
+
+
+        return lateness;
     };
+
 
     // --- Data Preparation ---
     const todaysAttendance = useMemo(() => {
@@ -89,17 +97,23 @@ export default function AttendancePage() {
         setIsSubmitting(true);
         try {
             const now = new Date();
-            const arrivalTime = format(now, 'HH:mm:ss');
-            const lateness = calculateLateness(format(now, 'HH:mm'));
+
+            // store DB-friendly 24h timestamp
+            const arrivalTime = format(now, "HH:mm:ss");
+
+            // for lateness calculation
+            const lateness = calculateLateness(format(now, "HH:mm"));
+
             await attendanceService.markAttendance({
                 student_id: studentId,
                 date: todayGregorianForDB,
-                status: 'Present',
+                status: "Present",
                 arrival_time: arrivalTime,
-                lateness_in_minutes: lateness,
+                lateness_in_minutes: lateness, // can be negative
                 excuse: null,
                 punishment_id: null,
             });
+
             await refreshData();
         } catch (error) {
             console.error("Failed to mark present:", error);
@@ -166,11 +180,10 @@ export default function AttendancePage() {
                         <CheckCircle className="mr-2 h-4 w-4" /> ተግኝቷል
                     </Button>
                     <Button
-                        variant="destructive"
                         size="sm"
                         onClick={() => handleOpenAbsenceModal(student)}
                         disabled={isSubmitting}
-                        className="hover:bg-red-500 hover:text-white"
+                        className="bg-red-500 hover:text-white"
                     >
                         <XCircle className="mr-2 h-4 w-4" /> አልመጣም
                     </Button>
@@ -280,8 +293,19 @@ export default function AttendancePage() {
                                                                 : getStatusBadge(record.status)}
                                                     </TableCell>
                                                     <TableCell className="whitespace-nowrap">
-                                                        {record.lateness_in_minutes != null ? `${record.lateness_in_minutes} min` : <span className="text-muted-foreground">N/A</span>}
+                                                        {record.lateness_in_minutes != null ? (
+                                                            record.lateness_in_minutes > 0 ? (
+                                                                `${record.lateness_in_minutes} ደቂቃ አርፍዷል`
+                                                            ) : record.lateness_in_minutes < 0 ? (
+                                                                `${Math.abs(record.lateness_in_minutes)} ደቂቃ ቀድሟል`
+                                                            ) : (
+                                                                "On time"
+                                                            )
+                                                        ) : (
+                                                            <span className="text-muted-foreground">N/A</span>
+                                                        )}
                                                     </TableCell>
+
                                                     <TableCell className="text-right pr-6">
                                                         {renderActions(record, student)}
                                                     </TableCell>
