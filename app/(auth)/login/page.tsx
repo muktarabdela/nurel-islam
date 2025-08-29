@@ -204,15 +204,6 @@ export default function UstathLogin() {
                     </form>
                 </div>
 
-                <p className="text-center text-sm text-muted-foreground">
-                    Don't have an account?{' '}
-                    <Link
-                        href="/register"
-                        className="font-medium text-foreground hover:underline"
-                    >
-                        Register
-                    </Link>
-                </p>
             </div>
         </div>
     );

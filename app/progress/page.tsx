@@ -1,5 +1,4 @@
 "use client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
     Select,
@@ -18,7 +17,7 @@ import { StudentProgressCard } from "@/components/features/students/StudentProgr
 const getWeekRange = (date = new Date()) => {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     const start = new Date(d.setDate(diff));
 
     const end = new Date(start);

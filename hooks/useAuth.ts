@@ -43,6 +43,7 @@ export const useAuth = () => {
     const logout = useCallback(() => {
         localStorage.removeItem('ustathToken');
         localStorage.removeItem('ustathData');
+        document.cookie = 'ustathToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
         setIsAuthenticated(false);
         setUser(null);
         router.push('/login');

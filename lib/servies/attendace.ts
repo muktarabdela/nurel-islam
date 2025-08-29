@@ -27,7 +27,23 @@ export const attendanceService = {
 
         return data;
     },
+    async updateAttendance(attendanceId: string, updates: { arrival_time?: string; lateness_in_minutes?: number; }) {
+        try {
+            const { data, error } = await supabase
+                .from('attendance')
+                .update(updates)
+                .eq('id', attendanceId)
+                .select();
 
+            if (error) {
+                throw new Error(error.message);
+            }
+            return data;
+        } catch (error) {
+            console.error("Error updating attendance:", error);
+            throw error;
+        }
+    },
     async getAttendanceForDate(date: string): Promise<Attendance[]> {
         const { data, error } = await supabase
             .from('attendance')
